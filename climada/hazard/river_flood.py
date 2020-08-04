@@ -266,6 +266,15 @@ class RiverFlood(Hazard):
         self.intensity = sp.sparse.csr_matrix(new_intensity)
         self.fraction = sp.sparse.csr_matrix(new_fraction)
 
+    def get_dis_mask(self, dis = 'pos'):
+
+        new_intensity = self.intensity.todense()
+
+        if dis == 'pos':
+            dis_map = np.greater(new_intensity, 0)
+        else:
+            dis_map = np.less(new_intensity, 0)
+
     def exclude_returnlevel(self, frc_path):
         """
         Function allows to exclude flood impacts below a certain return level
