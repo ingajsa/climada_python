@@ -266,14 +266,30 @@ class RiverFlood(Hazard):
         self.intensity = sp.sparse.csr_matrix(new_intensity)
         self.fraction = sp.sparse.csr_matrix(new_fraction)
 
-    def get_dis_mask(self, dis = 'pos'):
+    def get_dis_mask(self, fld_trend_path, dis = 'pos'):
 
-        new_intensity = self.intensity.todense()
+        if not os.path.exists(fld_trend_path):
+            LOGGER.error('Invalid ReturnLevel-file path ' + fld_trend_path)
+            raise NameError
+        else:
+            metafrc, trend_data = read_raster(fld_trend_path, band=[1])
+            x_i = ((self.centroids.lon - metafrc['transform'][2]) /
+                   metafrc['transform'][0]).astype(int)
+            y_i = ((self.centroids.lat - metafrc['transform'][5]) /
+                   metafrc['transform'][4]).astype(int)
+
+        trend = trend_data[:, y_i*metafrc['width'] + x_i]
 
         if dis == 'pos':
-            dis_map = np.greater(new_intensity, 0)
+            dis_map = np.greater(trend, 0)
         else:
-            dis_map = np.less(new_intensity, 0)
+            dis_map = np.less(trend, 0)
+
+        new_trends = dis_map.astype(int)
+
+
+        self.intensity = sp.sparse.csr_matrix(new_trends)
+        self.fraction = sp.sparse.csr_matrix(new_trends)
 
     def exclude_returnlevel(self, frc_path):
         """
