@@ -273,6 +273,7 @@ class Exposures(GeoDataFrame):
         self['longitude'] = x_grid.flatten()
         self['latitude'] = y_grid.flatten()
         self['value'] = value.reshape(-1)
+        self.value_unit = DEF_VALUE_UNIT
         self.meta = meta
 
     def plot_scatter(self, mask=None, ignore_zero=False, pop_name=True,
