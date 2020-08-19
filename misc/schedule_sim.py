@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+Created on Wed Aug 19 22:35:58 2020
+
+@author: insauer
+"""
+
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
 Created on Fri May  8 20:29:10 2020
 
 @author: insauer
@@ -48,7 +56,7 @@ args = parser.parse_args()
 # set output dir
 
 
-PROT_STD = ['0','flopros']
+PROT_STD = ['policy','model']
 #for LPJ longrun
 
 #flood_dir = '/p/projects/ebm/data/hazard/floods/isimip2a-advanced/'
@@ -66,16 +74,10 @@ output = currentdir
 #    else:
 #        years = np.arange(1901, 2011)
 #else:
-if args.SM_mode == 'geo':
-    dis_path = '/home/insauer/projects/RiverDischarge/basin_trends_geo.nc'
-else:
-    dis_path = '/home/insauer/projects/RiverDischarge/basin_trends_pop.nc'
 
+dis_path = '/home/insauer/projects/RiverDischarge/basin_trends_geo.nc'
 
-if args.Socmode == 'nosoc':
-    flood_dir = '/p/projects/ebm/data/hazard/floods/isimip2a/'.format(args.Socmode)
-else:
-    flood_dir = '/p/projects/ebm/data/hazard/floods/isimip2a-{}/'.format(args.Socmode)
+flood_dir = '/p/projects/ebm/data/hazard/floods/isimip2a-flopros-advanced/'
 
 if args.CL_model == 'watch':
     years = np.arange(1971, 2002)
@@ -156,9 +158,9 @@ for cnt_ind in range(len(isos)):
     
     for pro_std in range(len(PROT_STD)):
         line_counter = save_lc
-        dph_path = flood_dir + '{}/{}/depth-150arcsec/flddph_annual_max_gev_0.1mmpd_protection-{}.nc'\
+        dph_path = flood_dir + '{}/{}/depth_150arcsec_annual_max_protection-flopros-{}.nc'\
             .format(args.CL_model, args.RF_model, PROT_STD[pro_std])
-        frc_path= flood_dir + '{}/{}/area-150arcsec/fldfrc_annual_max_gev_0.1mmpd_protection-{}.nc'\
+        frc_path= flood_dir + '{}/{}/area_150arcsec_annual_max_protection-flopros-{}.nc'\
             .format(args.CL_model, args.RF_model, PROT_STD[pro_std])
             
         if not os.path.exists(dph_path):
@@ -262,6 +264,6 @@ for cnt_ind in range(len(isos)):
     #if args.RF_model == 'lpjml':
         #dataDF.to_csv('output_{}_{}_fullProt_lpjml_long_2y.csv'.format(args.RF_model, args.CL_model))
     #else:
-    dataDF.to_csv('BasMap_Damage_{}_Output_{}_{}_0flopros_8010_{}.csv'.format(args.SM_mode, args.RF_model, args.CL_model, args.Socmode))
+    dataDF.to_csv('BasMap_Damage_{}_Output_{}_{}_policy-model_8010_{}.csv'.format(args.SM_mode, args.RF_model, args.CL_model, args.Socmode))
 
 
