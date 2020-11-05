@@ -46,10 +46,7 @@ args = parser.parse_args()
 indices = []
 sys.dont_write_bytecode = True
 
-#RF_MODEL = numpy.arange(1980,2017)
-
-SCENARIO = ['rcp26',
-            'rcp60']
+# Definition of the four forcing data sets
 
 CL_MODEL = [#'gfdl-esm2m',
             #'hadgem2-es',
@@ -60,6 +57,8 @@ CL_MODEL = [#'gfdl-esm2m',
             'watch',
             'wfdei'
             ]
+
+# Definition of the GHMS
 
 RF_MODEL = [
             'clm40',
