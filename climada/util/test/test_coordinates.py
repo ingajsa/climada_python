@@ -45,25 +45,65 @@ from climada.util.coordinates import convert_wgs_to_utm, \
                                      get_land_geometry, \
                                      get_resolution, \
                                      grid_is_regular, \
+                                     latlon_bounds, \
                                      latlon_to_geosph_vector, \
+                                     lon_normalize, \
                                      nat_earth_resolution, \
                                      points_to_raster, \
                                      pts_to_raster_meta, \
                                      read_raster, \
                                      read_raster_sample, \
+                                     read_raster_bounds, \
                                      read_vector, \
                                      refine_raster_data, \
                                      set_df_geometry_points, \
                                      NE_EPSG
 
 class TestFunc(unittest.TestCase):
-    """Test the auxiliary used with plot functions"""
+    """Test auxiliary functions"""
+
+    def test_lon_normalize(self):
+        """Test the longitude normalization function"""
+        data = np.array([-180, 20.1, -30, 190, -350])
+
+        # test in place operation
+        lon_normalize(data)
+        self.assertTrue(np.allclose(data, [180, 20.1, -30, -170, 10]))
+
+        # test with specific center and return value
+        data = lon_normalize(data, center=-170)
+        self.assertTrue(np.allclose(data, [-180, -339.9, -30, -170, 10]))
+
+    def test_latlon_bounds(self):
+        """Test latlon_bounds function"""
+        lat, lon = np.array([0, -2, 5]), np.array([-179, 175, 178])
+        bounds = latlon_bounds(lat, lon)
+        self.assertEqual(bounds, (175, -2, 181, 5))
+        bounds = latlon_bounds(lat, lon, buffer=1)
+        self.assertEqual(bounds, (174, -3, 182, 6))
+
+        # buffer exceeding antimeridian
+        lat, lon = np.array([0, -2.1, 5]), np.array([-179.5, -175, -178])
+        bounds = latlon_bounds(lat, lon, buffer=1)
+        self.assertEqual(bounds, (179.5, -3.1, 186, 6))
+
+        # longitude values need to be normalized before they lie between computed bounds:
+        lon_mid = 0.5 * (bounds[0] + bounds[2])
+        lon = lon_normalize(lon, center=lon_mid)
+        self.assertTrue(np.all((bounds[0] <= lon) & (lon <= bounds[2])))
+
+        # data covering almost the whole longitudinal range
+        lat, lon = np.linspace(-90, 90, 180), np.linspace(-180.0, 179, 360)
+        bounds = latlon_bounds(lat, lon)
+        self.assertEqual(bounds, (-179, -90, 180, 90))
+        bounds = latlon_bounds(lat, lon, buffer=1)
+        self.assertEqual(bounds, (-180, -90, 180, 90))
 
     def test_geosph_vector(self):
         """Test conversion from lat/lon to unit vector on geosphere"""
         data = np.array([[0, 0], [-13, 179]], dtype=np.float64)
-        vn, vbasis = latlon_to_geosph_vector(data[:,0], data[:,1], basis=True)
-        basis_scal = (vbasis[...,0,:] * vbasis[...,1,:]).sum(axis=-1)
+        vn, vbasis = latlon_to_geosph_vector(data[:, 0], data[:, 1], basis=True)
+        basis_scal = (vbasis[..., 0, :] * vbasis[..., 1, :]).sum(axis=-1)
         basis_norm = np.linalg.norm(vbasis, axis=-1)
         self.assertTrue(np.allclose(np.linalg.norm(vn, axis=-1), 1))
         self.assertTrue(np.allclose(basis_scal, 0))
@@ -79,13 +119,13 @@ class TestFunc(unittest.TestCase):
             [45.5, -212.2, 14, -124, 7709.827814738594, 8758.34146833],
         ])
         compute_dist = np.stack([
-            dist_approx(data[:,None,0], data[:,None,1],
-                data[:,None,2], data[:,None,3], method="equirect")[:,0,0],
-            dist_approx(data[:,None,0], data[:,None,1],
-                data[:,None,2], data[:,None,3], method="geosphere")[:,0,0],
+            dist_approx(data[:, None, 0], data[:, None, 1],
+                        data[:, None, 2], data[:, None, 3], method="equirect")[:, 0, 0],
+            dist_approx(data[:, None, 0], data[:, None, 1],
+                        data[:, None, 2], data[:, None, 3], method="geosphere")[:, 0, 0],
         ], axis=-1)
         self.assertEqual(compute_dist.shape[0], data.shape[0])
-        for d, cd in zip(data[:,4:], compute_dist):
+        for d, cd in zip(data[:, 4:], compute_dist):
             self.assertAlmostEqual(d[0], cd[0])
             self.assertAlmostEqual(d[1], cd[1])
 
@@ -95,21 +135,21 @@ class TestFunc(unittest.TestCase):
             [-13, 179, 5, -179, 2011.84774049, 2012.30698122],
         ])
         for i, method in enumerate(["equirect", "geosphere"]):
-            dist, vec = dist_approx(data[:,None,0], data[:,None,1],
-                data[:,None,2], data[:,None,3], log=True, method=method)
-            dist, vec = dist[:,0,0], vec[:,0,0]
+            dist, vec = dist_approx(data[:, None, 0], data[:, None, 1],
+                                    data[:, None, 2], data[:, None, 3], log=True, method=method)
+            dist, vec = dist[:, 0, 0], vec[:, 0, 0]
             self.assertTrue(np.allclose(np.linalg.norm(vec, axis=-1), dist))
-            self.assertTrue(np.allclose(dist, data[:,4 + i]))
+            self.assertTrue(np.allclose(dist, data[:, 4 + i]))
             # both points on equator (no change in latitude)
-            self.assertAlmostEqual(vec[0,0], 0)
+            self.assertAlmostEqual(vec[0, 0], 0)
             # longitude from 179 to -179 is positive (!) in lon-direction
-            self.assertTrue(np.all(vec[1,:] > 100))
+            self.assertTrue(np.all(vec[1, :] > 100))
 
 
     def test_read_vector_pass(self):
         """Test one columns data"""
-        shp_file = shapereader.natural_earth(resolution='110m', \
-            category='cultural', name='populated_places_simple')
+        shp_file = shapereader.natural_earth(resolution='110m', category='cultural',
+                                             name='populated_places_simple')
         lat, lon, geometry, intensity = read_vector(shp_file, ['pop_min', 'pop_max'])
 
         self.assertEqual(geometry.crs, from_epsg(NE_EPSG))
@@ -130,19 +170,19 @@ class TestFunc(unittest.TestCase):
 
     def test_compare_crs(self):
         """Compare two crs"""
-        crs_one = {'init':'epsg:4326'}
-        crs_two = {'init':'epsg:4326', 'no_defs': True}
+        crs_one = {'init': 'epsg:4326'}
+        crs_two = {'init': 'epsg:4326', 'no_defs': True}
         self.assertTrue(equal_crs(crs_one, crs_two))
 
     def test_set_df_geometry_points_pass(self):
         """Test set_df_geometry_points"""
-        df_val = gpd.GeoDataFrame(crs={'init':'epsg:2202'})
-        df_val['latitude'] = np.ones(10)*40.0
-        df_val['longitude'] = np.ones(10)*0.50
+        df_val = gpd.GeoDataFrame(crs={'init': 'epsg:2202'})
+        df_val['latitude'] = np.ones(10) * 40.0
+        df_val['longitude'] = np.ones(10) * 0.50
 
         set_df_geometry_points(df_val)
-        self.assertTrue(np.allclose(df_val.geometry[:].x.values, np.ones(10)*0.5))
-        self.assertTrue(np.allclose(df_val.geometry[:].y.values, np.ones(10)*40.))
+        self.assertTrue(np.allclose(df_val.geometry[:].x.values, np.ones(10) * 0.5))
+        self.assertTrue(np.allclose(df_val.geometry[:].y.values, np.ones(10) * 40.))
 
     def test_convert_wgs_to_utm_pass(self):
         """Test convert_wgs_to_utm"""
@@ -230,7 +270,7 @@ class TestGetGeodata(unittest.TestCase):
         """get_land_geometry with all earth."""
         res = get_land_geometry(resolution=110)
         self.assertIsInstance(res, shapely.geometry.multipolygon.MultiPolygon)
-        self.assertEqual(res.area, 21496.99098799273)
+        self.assertAlmostEqual(res.area, 21496.99098799273)
 
     def test_on_land_pass(self):
         """check point on land with 1:50.000.000 resolution."""
@@ -270,12 +310,16 @@ class TestGetGeodata(unittest.TestCase):
             # South America:
             [-12.497529, -58.849505],
             # Very close to coast of Somalia:
-            [1.96768, 45.23219],
+            [1.96475615, 45.23249055],
         ])
-        dists = [3583.33333333, 1394306.570185499, 630.91307999]
+        dists = [-3000, -1393549.5, 48.77]
+        dists_lowres = [416.66666667, 1393448.09801077, 1191.38205367]
         # Warning: This will download more than 300 MB of data!
-        res = dist_to_coast_nasa(points[:,0], points[:,1])
-        for d, r in zip(dists, res):
+        result = dist_to_coast_nasa(points[:, 0], points[:, 1], highres=True, signed=True)
+        result_lowres = dist_to_coast_nasa(points[:, 0], points[:, 1])
+        for d, r in zip(dists, result):
+            self.assertAlmostEqual(d, r)
+        for d, r in zip(dists_lowres, result_lowres):
             self.assertAlmostEqual(d, r)
 
     def test_get_country_geometries_country_pass(self):
@@ -339,7 +383,7 @@ class TestGetGeodata(unittest.TestCase):
         lon = np.array([-59.6250000000000, -59.6250000000000, -59.6250000000000,
                         -59.5416666666667, -59.5416666666667, -59.4583333333333,
                         -60.2083333333333, -60.2083333333333])
-        lat = np.array([13.125,13.20833333, 13.29166667, 13.125, 13.20833333,
+        lat = np.array([13.125, 13.20833333, 13.29166667, 13.125, 13.20833333,
                         13.125, 12.625, 12.70833333])
         for gridded in [True, False]:
             region_id = get_country_code(lat, lon, gridded=gridded)
@@ -394,8 +438,8 @@ class TestRasterMeta(unittest.TestCase):
         self.assertEqual(hei, 2)
         self.assertEqual(wid, 2)
 
-        grid_x, grid_y = np.mgrid[10 : 100 : complex(0, 5),
-                                  0 : 10 : complex(0, 5)]
+        grid_x, grid_y = np.mgrid[10: 100: complex(0, 5),
+                                  0: 10: complex(0, 5)]
         grid_x = grid_x.reshape(-1,)
         grid_y = grid_y.reshape(-1,)
         coord = np.array([grid_x, grid_y]).transpose()
@@ -404,8 +448,8 @@ class TestRasterMeta(unittest.TestCase):
         self.assertEqual(hei, 5)
         self.assertEqual(wid, 5)
 
-        grid_x, grid_y = np.mgrid[10 : 100 : complex(0, 4),
-                                  0 : 10 : complex(0, 5)]
+        grid_x, grid_y = np.mgrid[10: 100: complex(0, 4),
+                                  0: 10: complex(0, 5)]
         grid_x = grid_x.reshape(-1,)
         grid_y = grid_y.reshape(-1,)
         coord = np.array([grid_x, grid_y]).transpose()
@@ -419,29 +463,31 @@ class TestRasterMeta(unittest.TestCase):
         lat = np.array([13.125, 13.20833333, 13.29166667, 13.125,
                         13.20833333, 13.125, 12.625, 12.70833333,
                         12.79166667, 12.875, 12.95833333, 13.04166667])
-        lon = np.array([-59.6250000000000,-59.6250000000000,-59.6250000000000,-59.5416666666667,
-                        -59.5416666666667,-59.4583333333333,-60.2083333333333,-60.2083333333333,
-                        -60.2083333333333,-60.2083333333333,-60.2083333333333,-60.2083333333333])
+        lon = np.array([
+            -59.6250000000000, -59.6250000000000, -59.6250000000000, -59.5416666666667,
+            -59.5416666666667, -59.4583333333333, -60.2083333333333, -60.2083333333333,
+            -60.2083333333333, -60.2083333333333, -60.2083333333333, -60.2083333333333
+        ])
         res_lat, res_lon = get_resolution(lat, lon)
         self.assertAlmostEqual(res_lat, 0.0833333333333)
         self.assertAlmostEqual(res_lon, 0.0833333333333)
 
     def test_vector_to_raster_pass(self):
         """Test vector_to_raster"""
-        xmin, ymin, xmax, ymax = -60, -5, -50, 10 # bounds of points == centers pixels
+        xmin, ymin, xmax, ymax = -60, -5, -50, 10  # bounds of points == centers pixels
         points_bounds = (xmin, ymin, xmax, ymax)
         res = 0.5
         rows, cols, ras_trans = pts_to_raster_meta(points_bounds, (res, -res))
-        self.assertEqual(xmin - res/2 + res * cols, xmax + res/2)
-        self.assertEqual(ymax + res/2 - res * rows, ymin - res/2)
+        self.assertEqual(xmin - res / 2 + res * cols, xmax + res / 2)
+        self.assertEqual(ymax + res / 2 - res * rows, ymin - res / 2)
         self.assertEqual(ras_trans[0], res)
         self.assertEqual(ras_trans[4], -res)
         self.assertEqual(ras_trans[1], 0.0)
         self.assertEqual(ras_trans[3], 0.0)
-        self.assertEqual(ras_trans[2], xmin - res/2)
-        self.assertEqual(ras_trans[5], ymax + res/2)
-        self.assertTrue(ymin >= ymax + res/2 - rows*res)
-        self.assertTrue(xmax <= xmin - res/2 + cols*res)
+        self.assertEqual(ras_trans[2], xmin - res / 2)
+        self.assertEqual(ras_trans[5], ymax + res / 2)
+        self.assertTrue(ymin >= ymax + res / 2 - rows * res)
+        self.assertTrue(xmax <= xmin - res / 2 + cols * res)
 
     def test_pts_to_raster_irreg_pass(self):
         """Test pts_to_raster_meta with irregular points"""
@@ -454,18 +500,18 @@ class TestRasterMeta(unittest.TestCase):
         self.assertEqual(ras_trans[4], -res)
         self.assertEqual(ras_trans[1], 0.0)
         self.assertEqual(ras_trans[3], 0.0)
-        self.assertEqual(ras_trans[2], xmin - res/2)
-        self.assertEqual(ras_trans[5], ymax + res/2)
-        self.assertTrue(ymin >= ymax + res/2 - rows*res)
-        self.assertTrue(xmax <= xmin - res/2 + cols*res)
+        self.assertEqual(ras_trans[2], xmin - res / 2)
+        self.assertEqual(ras_trans[5], ymax + res / 2)
+        self.assertTrue(ymin >= ymax + res / 2 - rows * res)
+        self.assertTrue(xmax <= xmin - res / 2 + cols * res)
 
     def test_points_to_raster_pass(self):
         """Test points_to_raster"""
-        df_val = gpd.GeoDataFrame(crs={'init':'epsg:2202'})
+        df_val = gpd.GeoDataFrame(crs={'init': 'epsg:2202'})
         x, y = np.meshgrid(np.linspace(0, 2, 5), np.linspace(40, 50, 10))
         df_val['latitude'] = y.flatten()
         df_val['longitude'] = x.flatten()
-        df_val['value'] = np.ones(len(df_val))*10
+        df_val['value'] = np.ones(len(df_val)) * 10
         raster, meta = points_to_raster(df_val, val_names=['value'])
         self.assertTrue(equal_crs(meta['crs'], df_val.crs))
         self.assertAlmostEqual(meta['transform'][0], 0.5)
@@ -490,7 +536,7 @@ class TestRasterIO(unittest.TestCase):
         self.assertAlmostEqual(meta['transform'].e, -0.009000000000000341)
         self.assertEqual(meta['height'], 60)
         self.assertEqual(meta['width'], 50)
-        self.assertEqual(inten_ras.shape, (1, 60*50))
+        self.assertEqual(inten_ras.shape, (1, 60 * 50))
         self.assertAlmostEqual(inten_ras.reshape((60, 50))[25, 12], 0.056825936)
 
     def test_poly_raster_pass(self):
@@ -506,13 +552,13 @@ class TestRasterIO(unittest.TestCase):
         self.assertAlmostEqual(meta['transform'].e, -0.009000000000000341)
         self.assertEqual(meta['height'], 60)
         self.assertEqual(meta['width'], 50)
-        self.assertEqual(inten_ras.shape, (1, 60*50))
+        self.assertEqual(inten_ras.shape, (1, 60 * 50))
 
     def test_crs_raster_pass(self):
         """Test change projection"""
-        meta, inten_ras = read_raster(HAZ_DEMO_FL, dst_crs={'init':'epsg:2202'},
+        meta, inten_ras = read_raster(HAZ_DEMO_FL, dst_crs={'init': 'epsg:2202'},
                                       resampling=Resampling.nearest)
-        self.assertAlmostEqual(meta['crs'], {'init':'epsg:2202'})
+        self.assertAlmostEqual(meta['crs'], {'init': 'epsg:2202'})
         self.assertAlmostEqual(meta['transform'].c, 462486.8490210658)
         self.assertAlmostEqual(meta['transform'].a, 998.576177833903)
         self.assertAlmostEqual(meta['transform'].b, 0.0)
@@ -521,7 +567,7 @@ class TestRasterIO(unittest.TestCase):
         self.assertAlmostEqual(meta['transform'].e, -998.576177833903)
         self.assertEqual(meta['height'], 1081)
         self.assertEqual(meta['width'], 968)
-        self.assertEqual(inten_ras.shape, (1, 1081*968))
+        self.assertEqual(inten_ras.shape, (1, 1081 * 968))
         # TODO: NOT RESAMPLING WELL in this case!?
         self.assertAlmostEqual(inten_ras.reshape((1081, 968))[45, 22], 0)
 
@@ -534,20 +580,19 @@ class TestRasterIO(unittest.TestCase):
             (500000, 1105412.49126517),
             (478080.8562247154, 1105419.13439131)
         ])
-        meta, inten_ras = read_raster(HAZ_DEMO_FL, dst_crs={'init':'epsg:2202'},
+        meta, inten_ras = read_raster(HAZ_DEMO_FL, dst_crs={'init': 'epsg:2202'},
                                       geometry=[ply], resampling=Resampling.nearest)
-        self.assertAlmostEqual(meta['crs'], {'init':'epsg:2202'})
+        self.assertAlmostEqual(meta['crs'], {'init': 'epsg:2202'})
         self.assertEqual(meta['height'], 12)
         self.assertEqual(meta['width'], 23)
-        self.assertEqual(inten_ras.shape, (1, 12*23))
+        self.assertEqual(inten_ras.shape, (1, 12 * 23))
         # TODO: NOT RESAMPLING WELL in this case!?
         self.assertAlmostEqual(inten_ras.reshape((12, 23))[11, 12], 0.10063865780830383)
 
     def test_transform_raster_pass(self):
         transform = Affine(0.009000000000000341, 0.0, -69.33714959699981,
                            0.0, -0.009000000000000341, 10.42822096697894)
-        meta, inten_ras = read_raster(HAZ_DEMO_FL,
-            transform=transform, height=500, width=501)
+        meta, inten_ras = read_raster(HAZ_DEMO_FL, transform=transform, height=500, width=501)
 
         left = meta['transform'].xoff
         top = meta['transform'].yoff
@@ -561,7 +606,7 @@ class TestRasterIO(unittest.TestCase):
         self.assertEqual(meta['width'], 501)
         self.assertEqual(meta['height'], 500)
         self.assertEqual(meta['crs'].to_epsg(), 4326)
-        self.assertEqual(inten_ras.shape, (1, 500*501))
+        self.assertEqual(inten_ras.shape, (1, 500 * 501))
 
         meta, inten_all = read_raster(HAZ_DEMO_FL, window=Window(0, 0, 501, 500))
         self.assertTrue(np.array_equal(inten_all, inten_ras))
@@ -583,13 +628,19 @@ class TestRasterIO(unittest.TestCase):
             [45.3, 21.4, 0.7 * 0.4 * val_1],
             [-20, 0, fill_value],
         ])
-        res = 0.009
-        lat = 10.42822096697894 - res / 2 - i_j_vals[:,0] * res
-        lon = -69.33714959699981 + res / 2 + i_j_vals[:,1] * res
-        values = read_raster_sample(HAZ_DEMO_FL, lat, lon,
-                                    fill_value=fill_value)
+        res = 0.009000000000000341
+        lat = 10.42822096697894 - res / 2 - i_j_vals[:, 0] * res
+        lon = -69.33714959699981 + res / 2 + i_j_vals[:, 1] * res
+        values = read_raster_sample(HAZ_DEMO_FL, lat, lon, fill_value=fill_value)
         self.assertEqual(values.size, lat.size)
-        for i, val in enumerate(i_j_vals[:,2]):
+        for i, val in enumerate(i_j_vals[:, 2]):
+            self.assertAlmostEqual(values[i], val)
+
+        # with explicit intermediate resolution
+        values = read_raster_sample(HAZ_DEMO_FL, lat, lon, fill_value=fill_value,
+                                    intermediate_res=res)
+        self.assertEqual(values.size, lat.size)
+        for i, val in enumerate(i_j_vals[:, 2]):
             self.assertAlmostEqual(values[i], val)
 
     def test_refine_raster(self):
@@ -604,12 +655,36 @@ class TestRasterIO(unittest.TestCase):
 
         self.assertEqual(new_transform[0], new_res)
         self.assertEqual(new_transform[4], new_res)
-        self.assertAlmostEqual(new_data[2,2], data[0,0])
-        self.assertAlmostEqual(new_data[2,7], data[0,1])
-        self.assertAlmostEqual(new_data[7,2], data[1,0])
-        self.assertAlmostEqual(new_data[7,7], data[1,1])
-        self.assertAlmostEqual(new_data[1,2], data[0,0])
-        self.assertAlmostEqual(new_data[3,3], 0.4)
+        self.assertAlmostEqual(new_data[2, 2], data[0, 0])
+        self.assertAlmostEqual(new_data[2, 7], data[0, 1])
+        self.assertAlmostEqual(new_data[7, 2], data[1, 0])
+        self.assertAlmostEqual(new_data[7, 7], data[1, 1])
+        self.assertAlmostEqual(new_data[1, 2], data[0, 0])
+        self.assertAlmostEqual(new_data[3, 3], 0.4)
+
+    def test_bounded_refined_raster(self):
+        """Test reading a raster within specified bounds and at specified resolution"""
+        bounds = (-69.14, 9.99, -69.11, 10.03)
+        z, transform = read_raster_bounds(HAZ_DEMO_FL, bounds, res=0.004)
+
+        # the first dimension corresponds to the raster bands:
+        self.assertEqual(z.shape[0], 1)
+        z = z[0]
+
+        # the signs of stepsizes are retained from the original raster:
+        self.assertLess(transform[4], 0)
+        self.assertGreater(transform[0], 0)
+
+        # the bounds of the returned data are a little larger than the requested bounds:
+        self.assertLess(transform[2], bounds[0])
+        self.assertGreaterEqual(transform[2], bounds[0] - transform[0])
+        self.assertGreater(transform[2] + z.shape[1] * transform[0], bounds[2])
+        self.assertLessEqual(transform[2] + z.shape[1] * transform[0], bounds[2] + transform[0])
+
+        self.assertGreater(transform[5], bounds[3])
+        self.assertLessEqual(transform[5], bounds[3] - transform[4])
+        self.assertLess(transform[5] + z.shape[0] * transform[4], bounds[1])
+        self.assertGreaterEqual(transform[5] + z.shape[0] * transform[4], bounds[1] + transform[4])
 
 # Execute Tests
 if __name__ == "__main__":

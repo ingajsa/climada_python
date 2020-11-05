@@ -4,19 +4,12 @@ climada\.hazard package
 .. toctree::
 
     climada.hazard.centroids
+    climada.hazard.emulator
 
 climada\.hazard\.base module
 ----------------------------
 
 .. automodule:: climada.hazard.base
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-climada\.hazard\.crop\_potential module
----------------------------------------
-
-.. automodule:: climada.hazard.crop_potential
     :members:
     :undoc-members:
     :show-inheritance:
@@ -49,6 +42,14 @@ climada\.hazard\.low\_flow module
 ---------------------------------
 
 .. automodule:: climada.hazard.low_flow
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+climada\.hazard\.relative\_cropyield module
+-------------------------------------------
+
+.. automodule:: climada.hazard.relative_cropyield
     :members:
     :undoc-members:
     :show-inheritance:
@@ -97,6 +98,22 @@ climada\.hazard\.tc\_tracks module
 ----------------------------------
 
 .. automodule:: climada.hazard.tc_tracks
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+climada\.hazard\.tc\_tracks\_forecast module
+--------------------------------------------
+
+.. automodule:: climada.hazard.tc_tracks_forecast
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+climada\.hazard\.tc\_tracks\_synth module
+-----------------------------------------
+
+.. automodule:: climada.hazard.tc_tracks_synth
     :members:
     :undoc-members:
     :show-inheritance:

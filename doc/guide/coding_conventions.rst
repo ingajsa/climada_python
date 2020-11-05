@@ -3,7 +3,7 @@
 Coding Conventions
 ==================
 
-Contributions are very welcome! But we need to keep a certain order. Please seriously consider the following guidelines.
+Contributions are very welcome! But we need to keep a certain order. Please earnestly consider the following guidelines.
 
 Unit Tests
 ----------
@@ -15,6 +15,10 @@ For these cases it seems sufficient to test the calling method/function.
 Python Style
 ------------
 Follow `PEP 8 <https://www.python.org/dev/peps/pep-0008/>`_.
+
+Doc Strings
+-----------
+Modules, classes and public methods should have a Pydoc string in the `numpydoc <https://numpydoc.readthedocs.io/en/latest/format.html>`_ format.
 
 Linter
 ------
@@ -51,7 +55,7 @@ Readability
 - Be generous with defining Exception classes.
 - Comment! Comments are welcome to be redundant.
   And whenever there is a particular reason for the way something is done, comment on it!
-  It *will* pay off when maintaining, extending or debugging.
+  It *will* pay off when maintaining, extending or debugging. An extensive guide is `here <https://realpython.com/python-comments-guide/#when-writing-code-for-others>`_.
 - For functions which implement mathematical/scientific concepts, add the actual mathematical formula as comment or
   to the Doctstrings. This will help maintain a high level of scientific accuracy. E.g. How is are the random walk
   tracks computed for tropical cyclones?
@@ -77,16 +81,6 @@ Cython, Numba, ...
 - When using Numba, make sure to avoid Python objects as, otherwise, Numba will
   use the less efficient `object mode <https://numba.pydata.org/numba-doc/latest/glossary.html#term-object-mode>`_.
 
-Exposed Interface
-=================
-Library functions???
-
 Configuration
 =============
-Dealing with constants
-----------------------
-??? central registry?
-
-Dealing with defaults
----------------------
-???
+- URLs of external resources and locations of data directories should always be defined in the config.py file and not declared as constants.

@@ -71,32 +71,32 @@ class TestReader(unittest.TestCase):
         self.assertEqual(tc_haz.fraction.shape, (1, 296))
         self.assertEqual(tc_haz.fraction[0, 100], 1)
         self.assertEqual(tc_haz.fraction[0, 260], 0)
-        self.assertEqual(tc_haz.fraction.nonzero()[0].size, 263)
+        self.assertEqual(tc_haz.fraction.nonzero()[0].size, 280)
 
         self.assertTrue(isinstance(tc_haz.intensity, sparse.csr.csr_matrix))
         self.assertEqual(tc_haz.intensity.shape, (1, 296))
-        self.assertEqual(np.nonzero(tc_haz.intensity)[0].size, 263)
+        self.assertEqual(np.nonzero(tc_haz.intensity)[0].size, 280)
 
         self.assertEqual(tc_haz.intensity[0, 260], 0)
-        self.assertAlmostEqual(tc_haz.intensity[0, 1], 25.31408264386377)
-        self.assertAlmostEqual(tc_haz.intensity[0, 2], 26.76227933495309)
-        self.assertAlmostEqual(tc_haz.intensity[0, 3], 24.041402653331307)
-        self.assertAlmostEqual(tc_haz.intensity[0, 100], 35.30385118280622)
-        self.assertAlmostEqual(tc_haz.intensity[0, 250], 30.92304483320453)
-        self.assertAlmostEqual(tc_haz.intensity[0, 295], 40.83812621856698)
+        self.assertAlmostEqual(tc_haz.intensity[0, 1], 27.08333002)
+        self.assertAlmostEqual(tc_haz.intensity[0, 2], 28.46008202)
+        self.assertAlmostEqual(tc_haz.intensity[0, 3], 25.70445069)
+        self.assertAlmostEqual(tc_haz.intensity[0, 100], 36.45564037)
+        self.assertAlmostEqual(tc_haz.intensity[0, 250], 31.60115745)
+        self.assertAlmostEqual(tc_haz.intensity[0, 295], 40.62433745)
 
         to_kn = (1.0 * ureg.meter / ureg.second).to(ureg.knot).magnitude
         wind = tc_haz.intensity.toarray()[0,:]
-        self.assertAlmostEqual(wind[0] * to_kn, 46.579693474667714)
-        self.assertAlmostEqual(wind[80] * to_kn, 58.02875447978202)
-        self.assertAlmostEqual(wind[120] * to_kn, 37.88354475637135)
-        self.assertAlmostEqual(wind[200] * to_kn, 52.11922840551828)
-        self.assertAlmostEqual(wind[220] * to_kn, 62.63089353360513)
+        self.assertAlmostEqual(wind[0] * to_kn, 50.08492156)
+        self.assertAlmostEqual(wind[80] * to_kn, 61.13812028)
+        self.assertAlmostEqual(wind[120] * to_kn, 41.26159439)
+        self.assertAlmostEqual(wind[200] * to_kn, 54.85572160)
+        self.assertAlmostEqual(wind[220] * to_kn, 63.99749424)
 
         windfields = tc_haz.windfields[0].toarray()
         windfields = windfields.reshape(windfields.shape[0], -1, 2)
         windfield_norms = np.linalg.norm(windfields, axis=-1).max(axis=0)
-        intensity = tc_haz.intensity.toarray()[0,:]
+        intensity = tc_haz.intensity.toarray()[0, :]
         msk = (intensity > 0)
         self.assertTrue(np.allclose(windfield_norms[msk], intensity[msk]))
 
@@ -235,7 +235,7 @@ class TestClimateSce(unittest.TestCase):
     def test_apply_criterion_track(self):
         """Test _apply_criterion function."""
         criterion = list()
-        tmp_chg = {'criteria': {'basin': ['NA'], 'category':[1, 2, 3, 4, 5]},
+        tmp_chg = {'criteria': {'basin': ['NA'], 'category': [1, 2, 3, 4, 5]},
                    'year': 2100, 'change': 1.045, 'variable': 'intensity', 'function': np.multiply}
         criterion.append(tmp_chg)
         scale = 0.75
@@ -255,21 +255,25 @@ class TestClimateSce(unittest.TestCase):
         tc_cc = tc._apply_criterion(criterion, scale)
         self.assertTrue(np.allclose(tc.intensity[1, :].toarray(), tc_cc.intensity[1, :].toarray()))
         self.assertTrue(np.allclose(tc.intensity[3, :].toarray(), tc_cc.intensity[3, :].toarray()))
-        self.assertFalse(np.allclose(tc.intensity[0, :].toarray(), tc_cc.intensity[0, :].toarray()))
-        self.assertFalse(np.allclose(tc.intensity[2, :].toarray(), tc_cc.intensity[2, :].toarray()))
-        self.assertTrue(np.allclose(tc.intensity[0, :].toarray()*1.03375, tc_cc.intensity[0, :].toarray()))
-        self.assertTrue(np.allclose(tc.intensity[2, :].toarray()*1.03375, tc_cc.intensity[2, :].toarray()))
+        self.assertFalse(
+            np.allclose(tc.intensity[0, :].toarray(), tc_cc.intensity[0, :].toarray()))
+        self.assertFalse(
+            np.allclose(tc.intensity[2, :].toarray(), tc_cc.intensity[2, :].toarray()))
+        self.assertTrue(
+            np.allclose(tc.intensity[0, :].toarray() * 1.03375, tc_cc.intensity[0, :].toarray()))
+        self.assertTrue(
+            np.allclose(tc.intensity[2, :].toarray() * 1.03375, tc_cc.intensity[2, :].toarray()))
 
     def test_two_criterion_track(self):
         """Test _apply_criterion function with two criteria"""
         criterion = list()
-        tmp_chg = {'criteria': {'basin': ['NA'], 'category':[1, 2, 3, 4, 5]},
+        tmp_chg = {'criteria': {'basin': ['NA'], 'category': [1, 2, 3, 4, 5]},
                    'year': 2100, 'change': 1.045, 'variable': 'intensity', 'function': np.multiply}
         criterion.append(tmp_chg)
-        tmp_chg = {'criteria': {'basin': ['WP'], 'category':[1, 2, 3, 4, 5]},
+        tmp_chg = {'criteria': {'basin': ['WP'], 'category': [1, 2, 3, 4, 5]},
                    'year': 2100, 'change': 1.025, 'variable': 'intensity', 'function': np.multiply}
         criterion.append(tmp_chg)
-        tmp_chg = {'criteria': {'basin': ['WP'], 'category':[1, 2, 3, 4, 5]},
+        tmp_chg = {'criteria': {'basin': ['WP'], 'category': [1, 2, 3, 4, 5]},
                    'year': 2100, 'change': 1.025, 'variable': 'frequency', 'function': np.multiply}
         criterion.append(tmp_chg)
         scale = 0.75
@@ -281,7 +285,7 @@ class TestClimateSce(unittest.TestCase):
         tc.intensity[2, :] = np.arange(10, 20)
         tc.intensity[3, 3] = 3
         tc.intensity = sparse.csr_matrix(tc.intensity)
-        tc.frequency = np.ones(4)*0.5
+        tc.frequency = np.ones(4) * 0.5
         tc.basin = ['NA'] * 4
         tc.basin[3] = 'WP'
         tc.category = np.array([2, 0, 4, 1])
@@ -289,14 +293,20 @@ class TestClimateSce(unittest.TestCase):
 
         tc_cc = tc._apply_criterion(criterion, scale)
         self.assertTrue(np.allclose(tc.intensity[1, :].toarray(), tc_cc.intensity[1, :].toarray()))
-        self.assertFalse(np.allclose(tc.intensity[3, :].toarray(), tc_cc.intensity[3, :].toarray()))
-        self.assertFalse(np.allclose(tc.intensity[0, :].toarray(), tc_cc.intensity[0, :].toarray()))
-        self.assertFalse(np.allclose(tc.intensity[2, :].toarray(), tc_cc.intensity[2, :].toarray()))
-        self.assertTrue(np.allclose(tc.intensity[0, :].toarray()*1.03375, tc_cc.intensity[0, :].toarray()))
-        self.assertTrue(np.allclose(tc.intensity[2, :].toarray()*1.03375, tc_cc.intensity[2, :].toarray()))
-        self.assertTrue(np.allclose(tc.intensity[3, :].toarray()*1.01875, tc_cc.intensity[3, :].toarray()))
-        res_frequency = np.ones(4)*0.5
-        res_frequency[3] = 0.5*1.01875
+        self.assertFalse(
+            np.allclose(tc.intensity[3, :].toarray(), tc_cc.intensity[3, :].toarray()))
+        self.assertFalse(
+            np.allclose(tc.intensity[0, :].toarray(), tc_cc.intensity[0, :].toarray()))
+        self.assertFalse(
+            np.allclose(tc.intensity[2, :].toarray(), tc_cc.intensity[2, :].toarray()))
+        self.assertTrue(
+            np.allclose(tc.intensity[0, :].toarray() * 1.03375, tc_cc.intensity[0, :].toarray()))
+        self.assertTrue(
+            np.allclose(tc.intensity[2, :].toarray() * 1.03375, tc_cc.intensity[2, :].toarray()))
+        self.assertTrue(
+            np.allclose(tc.intensity[3, :].toarray() * 1.01875, tc_cc.intensity[3, :].toarray()))
+        res_frequency = np.ones(4) * 0.5
+        res_frequency[3] = 0.5 * 1.01875
         self.assertTrue(np.allclose(tc_cc.frequency, res_frequency))
 
 if __name__ == "__main__":

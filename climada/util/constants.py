@@ -31,8 +31,7 @@ __all__ = ['SOURCE_DIR',
            'GLB_CENTROIDS_MAT',
            'GLB_CENTROIDS_NC',
            'ISIMIP_GPWV3_NATID_150AS',
-           'NATEARTH_CENTROIDS_150AS',
-           'NATEARTH_CENTROIDS_360AS',
+           'NATEARTH_CENTROIDS',
            'DEMO_GDP2ASSET',
            'RIVER_FLOOD_REGIONS_CSV',
            'TC_ANDREW_FL',
@@ -76,16 +75,14 @@ GLB_CENTROIDS_NC = ISIMIP_GPWV3_NATID_150AS
 GLB_CENTROIDS_MAT = os.path.join(SYSTEM_DIR, 'GLB_NatID_grid_0360as_adv_2.mat')
 """Global centroids"""
 
-NATEARTH_CENTROIDS_150AS = os.path.join(SYSTEM_DIR, 'NatEarth_Centroids_150as.hdf5')
+NATEARTH_CENTROIDS = {
+    150: os.path.join(SYSTEM_DIR, 'NatEarth_Centroids_150as.hdf5'),
+    360: os.path.join(SYSTEM_DIR, 'NatEarth_Centroids_360as.hdf5'),
+}
 """
-Global centroids at 150 arc-seconds resolution,
-including region ids from Natural Earth.
-"""
-
-NATEARTH_CENTROIDS_360AS = os.path.join(SYSTEM_DIR, 'NatEarth_Centroids_360as.hdf5')
-"""
-Global centroids at 360 arc-seconds resolution,
-including region ids from Natural Earth and distance to coast from NASA.
+Global centroids at XXX arc-seconds resolution,
+including region ids from Natural Earth. The 360 AS file includes distance to
+coast from NASA.
 """
 
 ENT_TEMPLATE_XLS = os.path.join(SYSTEM_DIR, 'entity_template.xlsx')
@@ -100,24 +97,22 @@ RIVER_FLOOD_REGIONS_CSV = os.path.join(SYSTEM_DIR, 'NatRegIDs.csv')
 HAZ_DEMO_FL = os.path.join(DATA_DIR, 'demo', 'SC22000_VE__M1.grd.gz')
 """Raster file of flood over Venezuela. Model from GAR2015"""
 
-HAZ_DEMO_FLDDPH = os.path.join(DATA_DIR, 'demo',
-    'flddph_WaterGAP2_miroc5_historical_flopros_gev_picontrol_2000_0.1.nc')
+HAZ_DEMO_FLDDPH = os.path.join(
+    DATA_DIR, 'demo', 'flddph_WaterGAP2_miroc5_historical_flopros_gev_picontrol_2000_0.1.nc')
 """NetCDF4 Flood depth from isimip simulations"""
 
-HAZ_DEMO_FLDFRC = os.path.join(DATA_DIR, 'demo',
-    'fldfrc_WaterGAP2_miroc5_historical_flopros_gev_picontrol_2000_0.1.nc')
+HAZ_DEMO_FLDFRC = os.path.join(
+    DATA_DIR, 'demo', 'fldfrc_WaterGAP2_miroc5_historical_flopros_gev_picontrol_2000_0.1.nc')
 """NetCDF4 Flood fraction from isimip simulations"""
 
-HAZ_DEMO_MAT = os.path.join(DATA_DIR, 'demo', 'atl_prob.mat')
+HAZ_DEMO_MAT = os.path.join(DATA_DIR, 'demo', 'atl_prob_nonames.mat')
 """
-Hazard demo from climada in MATLAB: hurricanes from 1851 to 2011 over
-Florida with 100 centroids.
+Hazard demo from climada in MATLAB: hurricanes from 1851 to 2011 over Florida with 100 centroids.
 """
 
-HAZ_DEMO_H5 = os.path.join(DATA_DIR, 'demo', 'tc_fl_1975_2011.h5')
+HAZ_DEMO_H5 = os.path.join(DATA_DIR, 'demo', 'tc_fl_1990_2004.h5')
 """
-Hazard demo in h5 format: ibtracs from 1975 to 2011 over Florida with
-2500 centroids.
+Hazard demo in hdf5 format: IBTrACS from 1990 to 2004 over Florida with 2500 centroids.
 """
 
 DEMO_GDP2ASSET = os.path.join(DATA_DIR, 'demo', 'gdp2asset_CHE_exposure.nc')
@@ -149,7 +144,7 @@ TC_ANDREW_FL = os.path.join(DATA_DIR, 'demo',
 
 
 ISIMIP_NATID_TO_ISO = [
-       '', 'ABW', 'AFG', 'AGO', 'AIA', 'ALB', 'AND', 'ANT', 'ARE', 'ARG', 'ARM',
+    '', 'ABW', 'AFG', 'AGO', 'AIA', 'ALB', 'AND', 'ANT', 'ARE', 'ARG', 'ARM',
     'ASM', 'ATG', 'AUS', 'AUT', 'AZE', 'BDI', 'BEL', 'BEN', 'BFA', 'BGD', 'BGR',
     'BHR', 'BHS', 'BIH', 'BLR', 'BLZ', 'BMU', 'BOL', 'BRA', 'BRB', 'BRN', 'BTN',
     'BWA', 'CAF', 'CAN', 'CHE', 'CHL', 'CHN', 'CIV', 'CMR', 'COD', 'COG', 'COK',
