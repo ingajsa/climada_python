@@ -67,12 +67,12 @@ RF_MODEL = [
             'clm45',
             'clm50',
             'matsiro',
-            'cwatm'
+            'cwatm',
             'orchidee',
             'orchidee-dgvm',
             'dbh',
             'h08',
-            'jules-w1'
+            'jules-w1',
             'mpi-hm',
             'pcr-globwb',
             'watergap2',
