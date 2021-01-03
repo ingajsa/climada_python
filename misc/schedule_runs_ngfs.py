@@ -53,7 +53,11 @@ sys.dont_write_bytecode = True
 
 # Definition of the four forcing data sets
 
-SCENARIOS = ['rcp26', 'rcp60', 'rcp85', 'historical_1', 'historical_2']
+SCENARIOS = ['rcp26',
+             'rcp60',
+             'rcp85',
+             'historical_1',
+             'historical_2']
 
 CL_MODEL = ['gfdl-esm2m',
             'hadgem2-es',
@@ -178,7 +182,7 @@ for rf_model in RF_MODEL:
             schedule_run(run_nb=enum,flag=single,RF_model=rf_model,CL_model=cl_model, scenario = scenario)
             enum += 1
 if num > 1:
-    print("Scheduled %s runs" % num)
+    print("Scheduled %s runs" % enum)
 
 # def set_in_yml(paths, value):
 #     global yml_nodes
