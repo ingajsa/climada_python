@@ -101,9 +101,9 @@ for cnt_ind in range(len(isos)):
     # loop over protection standards
     for pro_std in range(len(PROT_STD)):
         line_counter = save_lc
-        dph_path = flood_dir + '{}/{}/{}/flddph_annual_max_gev_0.1mmpd_protection-{}.nc'\
+        dph_path = flood_dir + '{}/{}/{}/depth-150arcsec/flddph_annual_max_gev_0.1mmpd_protection-{}.nc'\
             .format(args.CL_model, args.RF_model, filename, PROT_STD[pro_std])
-        frc_path = flood_dir + '{}/{}/{}/fldfrc_annual_max_gev_0.1mmpd_protection-{}.nc'\
+        frc_path = flood_dir + '{}/{}/{}/area-150arcsec/fldfrc_annual_max_gev_0.1mmpd_protection-{}.nc'\
             .format(args.CL_model, args.RF_model, filename, PROT_STD[pro_std])
             
         if not os.path.exists(dph_path):

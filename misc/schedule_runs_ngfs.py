@@ -182,7 +182,7 @@ for rf_model in RF_MODEL:
             schedule_run(run_nb=enum,flag=single,RF_model=rf_model,CL_model=cl_model, scenario = scenario)
             enum += 1
 if num > 1:
-    print("Scheduled %s runs" % enum)
+    print("Scheduled %s runs" % num)
 
 # def set_in_yml(paths, value):
 #     global yml_nodes
