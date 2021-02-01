@@ -155,15 +155,14 @@ class RiverFlood(Hazard):
                     # self.centroids.set_meta_to_lat_lon()
 
         elif shape:
-            shapes = gpd.read_file(shape)
+            #shapes = gpd.read_file(shape)
 
-            rand_geom = shapes.geometry[0]
+            #rand_geom = shape.geometry[0]
 
             self.set_raster(files_intensity=[dph_path],
                             files_fraction=[frc_path],
                             band=bands.tolist(),
-                            geometry=rand_geom)
-            return
+                            geometry=shape)
 
         elif not centroids:
             # centroids as raster
