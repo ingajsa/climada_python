@@ -19,6 +19,7 @@ from climada.entity.exposures.base import Exposures
 from climada.entity.impact_funcs.river_flood import flood_imp_func_set
 from climada.hazard.river_flood import RiverFlood
 from climada.util.constants import RIVER_FLOOD_REGIONS_CSV
+import matplotlib.pyplot as plt
 import copy
 
 
@@ -56,7 +57,7 @@ elif args.scenario == 'historical_2':
 else:
     years = np.arange(2006, 2100)
     filename = args.scenario
-#years = np.arange(1971, 2011)
+
 
 # provide a file containing an income group given for each country ISO3 (optional)
 country_info = pd.read_csv(RIVER_FLOOD_REGIONS_CSV)
@@ -64,19 +65,15 @@ isos = country_info['ISO'].tolist()
 
 
 cont_list = country_info['if_RF'].tolist()
-l = (len(years) * (len(isos)-2))
+lines = (len(years) * (len(isos)-2))
 
 PROT_STD = ['0', 'flopros', '100']
 
-dataDF = pd.DataFrame(data={'Year': np.full(l, np.nan, dtype=int),
-                            'Country': np.full(l, "", dtype=str),
-                            'TotalAssetValue2005': np.full(l, np.nan, dtype=float),
-                            'Impact_0': np.full(l, np.nan, dtype=float),
-                            'Impact_Flopros': np.full(l, np.nan, dtype=float),
-                            'Impact_100': np.full(l, np.nan, dtype=float),
-                            'Impact_0_2y': np.full(l, np.nan, dtype=float),
-                            'Impact_Flopros_2y': np.full(l, np.nan, dtype=float),
-                            'Impact_100_2y': np.full(l, np.nan, dtype=float),
+dataDF = pd.DataFrame(data={'Year': np.full(lines, np.nan, dtype=int),
+                            'Country': np.full(lines, "", dtype=str),
+                            'TotalAssetValue2005': np.full(lines, np.nan, dtype=float),
+                            'Impact_Flopros': np.full(lines, np.nan, dtype=float),
+                            'Impact_Flopros_2y': np.full(lines, np.nan, dtype=float),
                             })
 # set JRC impact functions
 if_set = flood_imp_func_set()
@@ -96,57 +93,58 @@ for cnt_ind in range(len(isos)):
     ngfs_exp = Exposures()
     ngfs_exp.read_hdf5('/p/projects/ebm/inga/ngfs/data/exp_ngfs_{}.h5'.format(country[0]))
     #gdpaFix.correct_for_SSP(ssp_corr, country[0])
-    save_lc = line_counter
+
+    dph_path = flood_dir + '{}/{}/{}/depth-150arcsec/flddph_annual_max_gev_0.1mmpd_protection-{}.nc'\
+        .format(args.CL_model, args.RF_model, filename, PROT_STD[1])
+    frc_path = flood_dir + '{}/{}/{}/area-150arcsec/fldfrc_annual_max_gev_0.1mmpd_protection-{}.nc'\
+        .format(args.CL_model, args.RF_model, filename, PROT_STD[1])
+        
+    if not os.path.exists(dph_path):
+        print('{} path not found'.format(dph_path))
+        break
+    if not os.path.exists(frc_path):
+        print('{} path not found'.format(frc_path))
+        break
+
+    # set flood hazard
+    rf = RiverFlood()
     
-    # loop over protection standards
-    for pro_std in range(len(PROT_STD)):
-        line_counter = save_lc
-        dph_path = flood_dir + '{}/{}/{}/depth-150arcsec/flddph_annual_max_gev_0.1mmpd_protection-{}.nc'\
-            .format(args.CL_model, args.RF_model, filename, PROT_STD[pro_std])
-        frc_path = flood_dir + '{}/{}/{}/area-150arcsec/fldfrc_annual_max_gev_0.1mmpd_protection-{}.nc'\
-            .format(args.CL_model, args.RF_model, filename, PROT_STD[pro_std])
-            
-        if not os.path.exists(dph_path):
-            print('{} path not found'.format(dph_path))
-            break
-        if not os.path.exists(frc_path):
-            print('{} path not found'.format(frc_path))
-            break
+    rf.set_from_nc(dph_path=dph_path, frc_path=frc_path,
+                   countries=country, years = years, ISINatIDGrid=True)
+    # set flood hazard for subregions
 
-        # set flood hazard
-        rf = RiverFlood()
-        
-        rf.set_from_nc(dph_path=dph_path, frc_path=frc_path,
-                       countries=country, years = years, ISINatIDGrid=True)
-        # set flood hazard for subregions
+    rf2y = copy.copy(rf)
+    
+    rf2y.exclude_returnlevel(RF_PATH_FRC)
 
-        rf2y = copy.copy(rf)
-        
-        rf2y.exclude_returnlevel(RF_PATH_FRC)
+    # loop over all years
 
-        # loop over all years
-        for year in range(len(years)):
-            print('country_{}_year{}_protStd_{}'.format(country[0], str(years[year]), PROT_STD[pro_std]))
-            ini_date = str(years[year]) + '-01-01'
-            fin_date = str(years[year]) + '-12-31'
-            dataDF.iloc[line_counter, 0] = years[year]
-            dataDF.iloc[line_counter, 1] = country[0]
-
-            #gdpa.correct_for_SSP(ssp_corr, country[0])
-            # calculate damages for all combinations
-            imp_fl=Impact()
-            imp_fl.calc(ngfs_exp, if_set, rf2y.select(date=(ini_date,fin_date)))
-            imp2y_fl=Impact()
-            imp2y_fl.calc(ngfs_exp, if_set, rf2y.select(date=(ini_date,fin_date)))
-            
-            # write dataframe
-            dataDF.iloc[line_counter, 2] = imp_fl.tot_value
-            dataDF.iloc[line_counter, 3 + pro_std] = imp_fl.at_event[0]
-            dataDF.iloc[line_counter, 6 + pro_std] = imp2y_fl.at_event[0]
-
-            line_counter+=1
-   
+    #gdpa.correct_for_SSP(ssp_corr, country[0])
+    # calculate damages for all combinations
+    imp_fl=Impact()
+    imp_fl.calc(ngfs_exp, if_set, rf)
+    imp2y_fl=Impact()
+    imp2y_fl.calc(ngfs_exp, if_set, rf2y)
+    
+    # write dataframe
+    dataDF['Year'].iloc[line_counter: line_counter + len(years)] = years
+    dataDF['Country'].iloc[line_counter: line_counter + len(years)] = country[0]
+    dataDF['TotalAssetValue2005'].iloc[line_counter:line_counter + len(years)] = imp_fl.tot_value
+    dataDF['Impact_Flopros'].iloc[line_counter:line_counter + len(years)] = imp_fl.at_event
+    dataDF['Impact_Flopros_2y'].iloc[line_counter: line_counter + len(years)] = imp_fl.at_event
+    line_counter = line_counter + len(years)
     # save output dataframe
-    dataDF.to_csv('/p/projects/ebm/inga/ngfs/results/damage_fixexp2005_{}_{}_{}.csv'.format(args.CL_model, args.RF_model, args.scenario))
+    imp_fl.write_csv('/p/projects/ebm/inga/ngfs/results/impact_files/impact_{}_{}_{}_{}.csv'.format(country[0], args.CL_model, args.RF_model, args.scenario))
+    imp2y_fl.write_csv('/p/projects/ebm/inga/ngfs/results/impact_files/impact2y_{}_{}_{}_{}.csv'.format(country[0], args.CL_model, args.RF_model, args.scenario))
+
+    imp_fl.plot_raster_eai_exposure()
+
+    plt.savefig('/p/projects/ebm/inga/ngfs/results/figures/impact_{}_{}_{}_{}.png'.format(country[0], args.CL_model, args.RF_model, args.scenario))
+
+    imp2y_fl.plot_raster_eai_exposure()
+
+    plt.savefig('/p/projects/ebm/inga/ngfs/results/figures/impact2y_{}_{}_{}_{}.png'.format(country[0], args.CL_model, args.RF_model, args.scenario))
+
+    dataDF.to_csv('/p/projects/ebm/inga/ngfs/results/full_impact/damage_fixexp2005_{}_{}_{}.csv'.format(country[0], args.CL_model, args.RF_model, args.scenario))
 
 

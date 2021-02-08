@@ -55,9 +55,7 @@ sys.dont_write_bytecode = True
 
 SCENARIOS = ['rcp26',
              'rcp60',
-             'rcp85',
-             'historical_1',
-             'historical_2']
+             'rcp85']
 
 CL_MODEL = ['gfdl-esm2m',
             'hadgem2-es',
