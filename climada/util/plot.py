@@ -456,17 +456,17 @@ def get_transformation(crs_in):
     Returns:
         ccrs.Projection, str
     """
-    try:
-        if CRS.from_user_input(crs_in) == CRS.from_user_input({'init': 'epsg:3395'}):
-            crs_epsg = ccrs.Mercator()
-        else:
-            crs_epsg = ccrs.epsg(CRS.from_user_input(crs_in).to_epsg())
-    except ValueError:
-        crs_epsg = ccrs.PlateCarree()
-    except requests.exceptions.ConnectionError:
-        LOGGER.warning('No internet connection. Using projection PlateCarree in plot.')
-        crs_epsg = ccrs.PlateCarree()
-
+    # try:
+    #     if CRS.from_user_input(crs_in) == CRS.from_user_input({'init': 'epsg:3395'}):
+    #         crs_epsg = ccrs.Mercator()
+    #     else:
+    #         crs_epsg = ccrs.epsg(CRS.from_user_input(crs_in).to_epsg())
+    # except ValueError:
+    #     crs_epsg = ccrs.PlateCarree()
+    # except requests.exceptions.ConnectionError:
+    #     LOGGER.warning('No internet connection. Using projection PlateCarree in plot.')
+    #     crs_epsg = ccrs.PlateCarree()
+    crs_epsg = ccrs.PlateCarree()
     try:
         units = crs_epsg.proj4_params['units']
     except KeyError:

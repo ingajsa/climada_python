@@ -144,7 +144,7 @@ for cnt_ind in range(len(isos)):
     imp_fl.plot_raster_eai_exposure()
 
     plt.savefig('/p/projects/ebm/inga/ngfs/results/figures/impact_{}_{}_{}_{}.png'.format(country[0], args.CL_model, args.RF_model, args.scenario))
-    
+    plt.close(fig)
     fig = plt.figure()
     imp2y_fl.plot_raster_eai_exposure()
 
