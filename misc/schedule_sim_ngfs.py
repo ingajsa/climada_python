@@ -11,6 +11,8 @@ import pandas as pd
 import sys
 import os
 import inspect
+import matplotlib
+matplotlib.use('Agg')
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
@@ -136,15 +138,18 @@ for cnt_ind in range(len(isos)):
     # save output dataframe
     imp_fl.write_csv('/p/projects/ebm/inga/ngfs/results/impact_files/impact_{}_{}_{}_{}.csv'.format(country[0], args.CL_model, args.RF_model, args.scenario))
     imp2y_fl.write_csv('/p/projects/ebm/inga/ngfs/results/impact_files/impact2y_{}_{}_{}_{}.csv'.format(country[0], args.CL_model, args.RF_model, args.scenario))
-
+    
+    fig = plt.figure()
+    
     imp_fl.plot_raster_eai_exposure()
 
     plt.savefig('/p/projects/ebm/inga/ngfs/results/figures/impact_{}_{}_{}_{}.png'.format(country[0], args.CL_model, args.RF_model, args.scenario))
-
+    
+    fig = plt.figure()
     imp2y_fl.plot_raster_eai_exposure()
 
     plt.savefig('/p/projects/ebm/inga/ngfs/results/figures/impact2y_{}_{}_{}_{}.png'.format(country[0], args.CL_model, args.RF_model, args.scenario))
-
+    plt.close(fig)
     dataDF.to_csv('/p/projects/ebm/inga/ngfs/results/full_impact/damage_fixexp2005_{}_{}_{}.csv'.format(country[0], args.CL_model, args.RF_model, args.scenario))
 
 
