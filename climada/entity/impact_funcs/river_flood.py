@@ -133,6 +133,20 @@ class IFRiverFlood(ImpactFunc):
                              1.0000, 1.0000, 1.0000, 1.0000])
 
         self.paa = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+        
+    def set_RF_IF_Exposed(self):
+        self.id = 7
+        self.name = "damage function for exposed asset"
+        self.continent = 'SouthAmerica'
+        self.intensity = np.array([0., 0.5, 1., 1.5, 2., 3., 4., 5., 6., 12.])
+
+        self.mdd = np.array([1.0000, 1.0000, 1.0000, 1.0000, 1.0000,
+                             1.0000, 1.0000, 1.0000, 1.0000, 1.0000])
+
+        self.mdr = np.array([1.0000, 1.0000, 1.0000, 1.0000, 1.0000, 1.0000,
+                             1.0000, 1.0000, 1.0000, 1.0000])
+
+        self.paa = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 
 def flood_imp_func_set():
     """Builds impact function set for river flood, using standard files"""
@@ -161,6 +175,10 @@ def flood_imp_func_set():
 
     if_sa = IFRiverFlood()
     if_sa.set_RF_IF_SouthAmerica()
+    if_set.append(if_sa)
+
+    if_sa = IFRiverFlood()
+    if_sa.set_RF_IF_Exposed()
     if_set.append(if_sa)
 
     return if_set

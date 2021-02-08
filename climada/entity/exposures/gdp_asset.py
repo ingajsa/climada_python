@@ -46,7 +46,7 @@ class GDP2Asset(Exposures):
         return GDP2Asset
 
     def set_countries(self, countries=[], reg=[], ref_year=2000,
-                      path=None):
+                      path=None, unit='Asset'):
         """Model countries using values at reference year. If GDP or income
         group not available for that year, consider the value of the closest
         available year.
@@ -78,7 +78,7 @@ class GDP2Asset(Exposures):
 
             for cntr_ind in range(len(countries)):
                 gdp2a_list.append(self._set_one_country(countries[cntr_ind],
-                                                        ref_year, path))
+                                                        ref_year, path, unit))
                 tag.description += ("{} GDP2Asset \n").\
                     format(countries[cntr_ind])
             Exposures.__init__(self, gpd.GeoDataFrame(
@@ -89,12 +89,15 @@ class GDP2Asset(Exposures):
             raise
         self.tag = tag
         self.ref_year = ref_year
-        self.value_unit = 'USD'
-        self.tag.description = 'GDP2Asset ' + str(self.ref_year)
+        if unit == 'pop':
+            self.value_unit = 'people'
+            self.tag.description = 'exposed population' + str(self.ref_year)
+        else:
+            self.value_unit = 'USD'
+            self.tag.description = 'GDP2Asset ' + str(self.ref_year)
         self.crs = DEF_CRS
         # set meta
         res = 0.0416666
-
 
         rows, cols, ras_trans = pts_to_raster_meta((self.longitude.min(),
                                                     self.latitude.min(),
@@ -104,7 +107,7 @@ class GDP2Asset(Exposures):
                      'transform': ras_trans}
 
     @staticmethod
-    def _set_one_country(countryISO, ref_year, path=None):
+    def _set_one_country(countryISO, ref_year, path=None, unit='Asset'):
         """Extract coordinates of selected countries or region
         from NatID grid.
         Parameters:
@@ -121,12 +124,15 @@ class GDP2Asset(Exposures):
         reg_id, if_rf = _fast_if_mapping(natID, natID_info)
         lat, lon = get_region_gridpoints(countries=[natID], iso=False, basemap="isimip")
         coord = np.stack([lat, lon], axis=1)
-        assets = _read_GDP(coord, ref_year, path)
-        reg_id_info = np.full((len(assets),), reg_id)
-        if_rf_info = np.full((len(assets),), if_rf)
+        if unit == 'Asset':
+            value = _read_GDP(coord, ref_year, path)
+        else:
+            value = _read_pop(coord, ref_year, path)
+        reg_id_info = np.full((len(value),), reg_id)
+        if_rf_info = np.full((len(value),), if_rf)
 
         exp_gdpasset = GDP2Asset()
-        exp_gdpasset['value'] = assets
+        exp_gdpasset['value'] = value
         exp_gdpasset['latitude'] = coord[:, 0]
         exp_gdpasset['longitude'] = coord[:, 1]
         exp_gdpasset[INDICATOR_IF + DEF_HAZ_TYPE] = if_rf_info
@@ -196,6 +202,45 @@ def _read_GDP(shp_exposures, ref_year, path=None):
         asset = gdp * conv_factors
 
     return asset
+
+
+def _read_pop(shp_exposures, ref_year, path=None):
+    """Read GDP-values for the selected area and convert it to asset.
+        Parameters:
+            shp_exposure(2d-array float): coordinates of area
+            ref_year(int): year under consideration
+            path(str): path for gdp-files
+        Raises:
+            KeyError, OSError
+        Returns:
+            np.array
+        """
+    try:
+        pop_file = xr.open_dataset(path)
+        pop_lon = pop_file.lon.data
+        pop_lat = pop_file.lat.data
+        time = pop_file.time.dt.year
+    except OSError:
+        LOGGER.error('Problems while reading %s check exposure_file specifications', path)
+        raise OSError
+    try:
+        year_index = np.where(time == ref_year)[0][0]
+    except IndexError:
+        LOGGER.error('No data available for year %s', ref_year)
+        raise KeyError
+
+    pop = pop_file.var1[year_index, :, :].data
+    _test_gdp_centr_match(pop_lat, pop_lon, shp_exposures)
+
+    pop = sp.interpolate.interpn((pop_lat, pop_lon),
+                                 np.nan_to_num(pop),
+                                 (shp_exposures[:, 0],
+                                 shp_exposures[:, 1]),
+                                 method='nearest',
+                                 bounds_error=False,
+                                 fill_value=None)
+
+    return pop
 
 
 def _test_gdp_centr_match(gdp_lat, gdp_lon, shp_exposures):
