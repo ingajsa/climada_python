@@ -289,6 +289,7 @@ class RiverFlood(Hazard):
                                                 fraction))
             new_fraction = new_fraction.clip(0)
             self.fraction = sp.sparse.csr_matrix(new_fraction)
+            
 
     def set_flooded_area(self, save_centr=False):
         """

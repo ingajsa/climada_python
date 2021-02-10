@@ -46,7 +46,7 @@ class GDP2Asset(Exposures):
         return GDP2Asset
 
     def set_countries(self, countries=[], reg=[], ref_year=2000,
-                      path=None, unit='Asset'):
+                      path=None, unit='asset', ssp_resc_path=None, cap_resc_path=None):
         """Model countries using values at reference year. If GDP or income
         group not available for that year, consider the value of the closest
         available year.
@@ -78,7 +78,8 @@ class GDP2Asset(Exposures):
 
             for cntr_ind in range(len(countries)):
                 gdp2a_list.append(self._set_one_country(countries[cntr_ind],
-                                                        ref_year, path, unit))
+                                                        ref_year, path, unit, ssp_resc_path,
+                                                        cap_resc_path))
                 tag.description += ("{} GDP2Asset \n").\
                     format(countries[cntr_ind])
             Exposures.__init__(self, gpd.GeoDataFrame(
@@ -92,9 +93,12 @@ class GDP2Asset(Exposures):
         if unit == 'pop':
             self.value_unit = 'people'
             self.tag.description = 'exposed population' + str(self.ref_year)
-        else:
+        elif unit == 'asset':
             self.value_unit = 'USD'
             self.tag.description = 'GDP2Asset ' + str(self.ref_year)
+        else:
+            self.value_unit = 'USD'
+            self.tag.description = 'GDP ' + str(self.ref_year)
         self.crs = DEF_CRS
         # set meta
         res = 0.0416666
@@ -107,7 +111,8 @@ class GDP2Asset(Exposures):
                      'transform': ras_trans}
 
     @staticmethod
-    def _set_one_country(countryISO, ref_year, path=None, unit='Asset'):
+    def _set_one_country(countryISO, ref_year, path=None, unit='asset', ssp_resc_path=None,
+                         cap_resc_path=None):
         """Extract coordinates of selected countries or region
         from NatID grid.
         Parameters:
@@ -124,10 +129,17 @@ class GDP2Asset(Exposures):
         reg_id, if_rf = _fast_if_mapping(natID, natID_info)
         lat, lon = get_region_gridpoints(countries=[natID], iso=False, basemap="isimip")
         coord = np.stack([lat, lon], axis=1)
-        if unit == 'Asset':
+        if unit == 'asset':
+            value = _read_asset(coord, ref_year, path)
+            if ssp_resc_path:
+                value = _apply_ssp_rescal(value, countryISO, ref_year, ssp_resc_path)
+                if cap_resc_path:
+                    value = _apply_cap_rescal(value, countryISO, ref_year, cap_resc_path)
+        elif unit == 'gdp':
             value = _read_GDP(coord, ref_year, path)
         else:
             value = _read_pop(coord, ref_year, path)
+
         reg_id_info = np.full((len(value),), reg_id)
         if_rf_info = np.full((len(value),), if_rf)
 
@@ -141,6 +153,43 @@ class GDP2Asset(Exposures):
 
 
 def _read_GDP(shp_exposures, ref_year, path=None):
+    """Read GDP-values for the selected area and convert it to asset.
+        Parameters:
+            shp_exposure(2d-array float): coordinates of area
+            ref_year(int): year under consideration
+            path(str): path for gdp-files
+        Raises:
+            KeyError, OSError
+        Returns:
+            np.array
+        """
+    try:
+        gdp_file = xr.open_dataset(path)
+        gdp_lon = gdp_file.lon.data
+        gdp_lat = gdp_file.lat.data
+        time = gdp_file.time.dt.year
+    except OSError:
+        LOGGER.error('Problems while reading %s check exposure_file specifications', path)
+        raise OSError
+    try:
+        year_index = np.where(time == ref_year)[0][0]
+    except IndexError:
+        LOGGER.error('No data available for year %s', ref_year)
+        raise KeyError
+
+    gdp = gdp_file.gdp_grid[year_index, :, :].data
+    _test_gdp_centr_match(gdp_lat, gdp_lon, shp_exposures)
+    gdp = sp.interpolate.interpn((gdp_lat, gdp_lon),
+                                 np.nan_to_num(gdp),
+                                 (shp_exposures[:, 0],
+                                  shp_exposures[:, 1]),
+                                 method='nearest',
+                                 bounds_error=False,
+                                 fill_value=None)
+
+    return gdp
+
+def _read_asset(shp_exposures, ref_year, path=None):
     """Read GDP-values for the selected area and convert it to asset.
         Parameters:
             shp_exposure(2d-array float): coordinates of area
@@ -215,11 +264,13 @@ def _read_pop(shp_exposures, ref_year, path=None):
         Returns:
             np.array
         """
+        
+    ref_year = ref_year-1860
     try:
-        pop_file = xr.open_dataset(path)
+        pop_file = xr.open_dataset(path, decode_times=False)
         pop_lon = pop_file.lon.data
         pop_lat = pop_file.lat.data
-        time = pop_file.time.dt.year
+        time = pop_file.time
     except OSError:
         LOGGER.error('Problems while reading %s check exposure_file specifications', path)
         raise OSError
@@ -241,6 +292,20 @@ def _read_pop(shp_exposures, ref_year, path=None):
                                  fill_value=None)
 
     return pop
+
+def _apply_ssp_rescal(value, country, ref_year, resc_path):
+
+    resc_factors = pd.read_csv(resc_path)
+    resc_fac_cnt_yr = resc_factors.loc[resc_factors['ISO'] == country, str(ref_year)].sum()
+
+    return value * resc_fac_cnt_yr
+
+def _apply_cap_rescal(value, country, ref_year, resc_path):
+
+    cap_factors = pd.read_csv(resc_path)
+    capst_fac_cnt_yr = cap_factors.loc[cap_factors['ISO'] == country, str(ref_year)].sum()
+
+    return value * capst_fac_cnt_yr
 
 
 def _test_gdp_centr_match(gdp_lat, gdp_lon, shp_exposures):
