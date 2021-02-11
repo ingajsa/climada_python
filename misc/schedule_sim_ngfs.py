@@ -139,17 +139,17 @@ for cnt_ind in range(len(isos)):
     imp_fl.write_csv('/p/projects/ebm/inga/ngfs/results/impact_files/impact_{}_{}_{}_{}.csv'.format(country[0], args.CL_model, args.RF_model, args.scenario))
     imp2y_fl.write_csv('/p/projects/ebm/inga/ngfs/results/impact_files/impact2y_{}_{}_{}_{}.csv'.format(country[0], args.CL_model, args.RF_model, args.scenario))
     
-    fig = plt.figure()
+    # fig = plt.figure()
     
-    imp_fl.plot_raster_eai_exposure()
+    # imp_fl.plot_raster_eai_exposure()
 
-    plt.savefig('/p/projects/ebm/inga/ngfs/results/figures/impact_{}_{}_{}_{}.png'.format(country[0], args.CL_model, args.RF_model, args.scenario))
-    plt.close(fig)
-    fig = plt.figure()
-    imp2y_fl.plot_raster_eai_exposure()
+    # plt.savefig('/p/projects/ebm/inga/ngfs/results/figures/impact_{}_{}_{}_{}.png'.format(country[0], args.CL_model, args.RF_model, args.scenario))
+    # plt.close(fig)
+    # fig = plt.figure()
+    # imp2y_fl.plot_raster_eai_exposure()
 
-    plt.savefig('/p/projects/ebm/inga/ngfs/results/figures/impact2y_{}_{}_{}_{}.png'.format(country[0], args.CL_model, args.RF_model, args.scenario))
-    plt.close(fig)
-    dataDF.to_csv('/p/projects/ebm/inga/ngfs/results/full_impact/damage_fixexp2005_{}_{}_{}.csv'.format(country[0], args.CL_model, args.RF_model, args.scenario))
+    # plt.savefig('/p/projects/ebm/inga/ngfs/results/figures/impact2y_{}_{}_{}_{}.png'.format(country[0], args.CL_model, args.RF_model, args.scenario))
+    # plt.close(fig)
+    dataDF.to_csv('/p/projects/ebm/inga/ngfs/results/full_impact/damage_fixexp2005_{}_{}_{}.csv'.format(args.CL_model, args.RF_model, args.scenario))
 
 
