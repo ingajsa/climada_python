@@ -226,6 +226,6 @@ for c, cnt_iso in enumerate(isos):
                 line_counter+=1
    
     # save output dataframe
-    dataDF.to_csv('basin-country-damage_{}_{}_{}.csv'.format(args.RF_model, args.CL_model, args.Socmode))
+    dataDF.to_csv('basin-country-damage_{}_{}.csv'.format(args.RF_model, args.CL_model))
 
 
