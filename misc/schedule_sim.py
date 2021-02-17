@@ -35,6 +35,16 @@ parser.add_argument(
 parser.add_argument(
     '--CL_model', type=str, default='princeton',
     help='Climate forcing dataset')
+parser.add_argument(
+    '--cnt0', type=int, default=0,
+    help='runoff model')
+parser.add_argument(
+    '--cnt1', type=str, default=13,
+    help='Climate forcing dataset')
+parser.add_argument(
+    '--n_bas', type=str, default=100,
+    help='Climate forcing dataset')
+
 
 args = parser.parse_args()
 
@@ -70,11 +80,11 @@ else:
     years = np.arange(1971, 2011)
 
 country_info = pd.read_csv(RIVER_FLOOD_REGIONS_CSV)
-isos = country_info['ISO'].tolist()
+isos = country_info['ISO'].tolist()[args.cnt0:args.cnt1]
 
 
-cont_list = country_info['if_RF'].tolist()
-l = (len(years) * 2100)
+cont_list = country_info['if_RF'].tolist()[args.cnt0:args.cnt1]
+l = (len(years) * args.n_bas)
 continent_names = ['Africa', 'Asia', 'Europe', 'NorthAmerica', 'Oceania', 'SouthAmerica']
 
 
@@ -171,9 +181,6 @@ for c, cnt_iso in enumerate(isos):
                 depth = rf.intensity.todense()[y]
                 dataDF['mean_flddph_{}'.format(pro_std)].iloc[line_counter] = depth[np.where(depth>0)].mean()
                 # set variable exposure
-                gdpa = GDP2Asset()
-                gdpa.set_countries(countries=[cnt_iso], ref_year=year, path=gdp_path, ssp_resc_path=ssp_resc,
-                   cap_resc_path=cap_stock_conv)
                 pop = GDP2Asset()
                 pop.set_countries(countries=[cnt_iso], ref_year=year, path=pop_path, unit='pop')
                 pop['if_RF'] = 7
@@ -224,8 +231,9 @@ for c, cnt_iso in enumerate(isos):
                 gdpa2010 = gdpa2010.drop(columns='centr_RF')
                 
                 line_counter+=1
+            dataDF.to_csv('basin-country-damage_{}_{}_{}_{}.csv'.format(args.RF_model, args.CL_model, str(args.cnt0), str(args.cnt1)))
    
     # save output dataframe
-    dataDF.to_csv('basin-country-damage_{}_{}.csv'.format(args.RF_model, args.CL_model))
+    dataDF.to_csv('basin-country-damage_{}_{}_{}_{}.csv'.format(args.RF_model, args.CL_model, str(args.cnt0), str(args.cnt1)))
 
 
