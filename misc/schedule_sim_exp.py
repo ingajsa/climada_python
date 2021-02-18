@@ -29,10 +29,10 @@ parser.add_argument(
     '--cnt0', type=int, default=0,
     help='runoff model')
 parser.add_argument(
-    '--cnt1', type=str, default=13,
+    '--cnt1', type=int, default=13,
     help='Climate forcing dataset')
 parser.add_argument(
-    '--n_bas', type=str, default=100,
+    '--n_bas', type=int, default=100,
     help='Climate forcing dataset')
 
 
