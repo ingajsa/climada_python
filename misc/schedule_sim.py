@@ -17,7 +17,7 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 import argparse
 import geopandas as gpd
-from climada.entity.exposures.gdp_asset import GDP2Asset
+from climada.entity.exposures.base import Exposures
 from climada.entity.impact_funcs.river_flood import flood_imp_func_set
 from climada.hazard.river_flood import RiverFlood
 from climada.util.constants import RIVER_FLOOD_REGIONS_CSV
@@ -39,10 +39,10 @@ parser.add_argument(
     '--cnt0', type=int, default=0,
     help='runoff model')
 parser.add_argument(
-    '--cnt1', type=str, default=13,
+    '--cnt1', type=int, default=13,
     help='Climate forcing dataset')
 parser.add_argument(
-    '--n_bas', type=str, default=100,
+    '--n_bas', type=int, default=100,
     help='Climate forcing dataset')
 
 
@@ -52,11 +52,8 @@ args = parser.parse_args()
 PROT_STD = ['0','flopros']
 
 # please set the path for the exposure data here (spatially explicit GDP data)
-gdp_path = '/p/projects/ebm/data/exposure/gdp/processed_data/gdp_1850-2100_downscaled-by-nightlight_2.5arcmin_remapcon_new_yearly_shifted.nc'
-pop_path = '/p/projects/ebm/data/exposure/population/hyde_ssp2_1860-2015_0150as_yearly_zip.nc4'
-
-ssp_resc = '/home/insauer/data/exposure_rescaling/resc_ssp_transition.csv'
-cap_stock_conv = '/home/insauer/data/exposure_rescaling/totalwealth_capital_stock_rescaling.csv'
+gdp_path = '/p/projects/ebm/inga/climada_exposures/asset/'
+pop_path = '/p/projects/ebm/inga/climada_exposures/population/'
 
 basin_country_link = pd.read_csv('/home/insauer/data/river_basins/HYDROSHED_4_basin_country_link.csv')
 # please set the path for the data containing the
@@ -132,12 +129,10 @@ for c, cnt_iso in enumerate(isos):
     cont = continent_names[int(conts-1)]
     
     # setting fixed exposures
-    gdpa1980 = GDP2Asset()
-    gdpa1980.set_countries(countries = [cnt_iso], ref_year = 1980, path=gdp_path, ssp_resc_path=ssp_resc,
-                   cap_resc_path=cap_stock_conv)
-    gdpa2010 = GDP2Asset()
-    gdpa2010.set_countries(countries = [cnt_iso], ref_year = 2010, path=gdp_path, ssp_resc_path=ssp_resc,
-                   cap_resc_path=cap_stock_conv)
+    gdpa1980 = Exposures()
+    gdpa1980.read_hdf5(gdp_path + 'asset_{}_1980.h5'.format(cnt_iso))
+    gdpa2010 = Exposures()
+    gdpa2010.read_hdf5(gdp_path + 'asset_{}_2010.h5'.format(cnt_iso))
 
     save_lc = line_counter
     
@@ -181,8 +176,8 @@ for c, cnt_iso in enumerate(isos):
                 depth = rf.intensity.todense()[y]
                 dataDF['mean_flddph_{}'.format(pro_std)].iloc[line_counter] = depth[np.where(depth>0)].mean()
                 # set variable exposure
-                pop = GDP2Asset()
-                pop.set_countries(countries=[cnt_iso], ref_year=year, path=pop_path, unit='pop')
+                pop = Exposures()
+                pop.read_hdf5(pop_path + 'pop_{}_{}.h5'.format(cnt_iso, str(year)))
                 pop['if_RF'] = 7
                 #gdpa.correct_for_SSP(ssp_corr, country[0])
                 # calculate damages for all combinations
@@ -192,9 +187,8 @@ for c, cnt_iso in enumerate(isos):
                 dataDF['total_pop'].iloc[line_counter] = exp_pop.tot_value
                 dataDF['exppop_{}'.format(pro_std)].iloc[line_counter] = exp_pop.at_event
                 
-                gdpa = GDP2Asset()
-                gdpa.set_countries(countries=[cnt_iso], ref_year = year, path=gdp_path, ssp_resc_path=ssp_resc,
-                   cap_resc_path=cap_stock_conv)
+                gdpa = Exposures()
+                gdpa.read_hdf5(gdp_path + 'asset_{}_{}.h5'.format(cnt_iso, str(year)))
                 
                 imp = Impact()
                 imp.calc(gdpa, if_set, rf.select(date=(ini_date, fin_date)))
@@ -231,9 +225,9 @@ for c, cnt_iso in enumerate(isos):
                 gdpa2010 = gdpa2010.drop(columns='centr_RF')
                 
                 line_counter+=1
-            dataDF.to_csv('basin-country-damage_{}_{}_{}_{}.csv'.format(args.RF_model, args.CL_model, str(args.cnt0), str(args.cnt1)))
+            dataDF.to_csv('/p/projects/ebm/inga/vulnerability/results/basin-country-damage_{}_{}_{}_{}.csv'.format(args.RF_model, args.CL_model, str(args.cnt0), str(args.cnt1)))
    
     # save output dataframe
-    dataDF.to_csv('basin-country-damage_{}_{}_{}_{}.csv'.format(args.RF_model, args.CL_model, str(args.cnt0), str(args.cnt1)))
+    dataDF.to_csv('/p/projects/ebm/inga/vulnerability/results/basin-country-damage_{}_{}_{}_{}.csv'.format(args.RF_model, args.CL_model, str(args.cnt0), str(args.cnt1)))
 
 
