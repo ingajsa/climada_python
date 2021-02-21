@@ -61,17 +61,17 @@ CL_MODEL = [#'gfdl-esm2m',
 # Definition of the GHMS
 
 RF_MODEL = [
-            'clm40',
-            'matsiro',
-            'jules-w1',
-            'jules-b1',
-            'orchidee',
-            'vic',
-            'dbh',
-            'h08',
-            'mpi-hm',
-            'pcr-globwb',
-            'watergap2',
+            # 'clm40',
+            # 'matsiro',
+            # 'jules-w1',
+            # 'jules-b1',
+            # 'orchidee',
+            # 'vic',
+            # 'dbh',
+            # 'h08',
+            # 'mpi-hm',
+            # 'pcr-globwb',
+            # 'watergap2',
            'lpjml']
 
 COUNTRIES = [[0,12], [12, 28], [28, 34], [34, 36], [36, 38],
