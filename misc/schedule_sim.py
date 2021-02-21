@@ -225,9 +225,9 @@ for c, cnt_iso in enumerate(isos):
                 gdpa2010 = gdpa2010.drop(columns='centr_RF')
                 
                 line_counter+=1
-            dataDF.to_csv('/p/projects/ebm/inga/vulnerability/results/basin-country-damage_{}_{}_{}_{}.csv'.format(args.RF_model, args.CL_model, str(args.cnt0), str(args.cnt1)))
+            dataDF.to_csv('/p/projects/ebm/inga/vulnerability/damage_sim/results/basin-country-damage_{}_{}_{}_{}.csv'.format(args.RF_model, args.CL_model, str(args.cnt0), str(args.cnt1)))
    
     # save output dataframe
-    dataDF.to_csv('/p/projects/ebm/inga/vulnerability/results/basin-country-damage_{}_{}_{}_{}.csv'.format(args.RF_model, args.CL_model, str(args.cnt0), str(args.cnt1)))
+    dataDF.to_csv('/p/projects/ebm/inga/vulnerability/damage_sim/results/basin-country-damage_{}_{}_{}_{}.csv'.format(args.RF_model, args.CL_model, str(args.cnt0), str(args.cnt1)))
 
 
