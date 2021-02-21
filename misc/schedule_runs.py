@@ -61,17 +61,17 @@ CL_MODEL = [#'gfdl-esm2m',
 # Definition of the GHMS
 
 RF_MODEL = [
-            # 'clm40',
-            # 'matsiro',
-            # 'jules-w1',
-            # 'jules-b1',
-            # 'orchidee',
-            # 'vic',
-            # 'dbh',
-            # 'h08',
-            # 'mpi-hm',
-            # 'pcr-globwb',
-            # 'watergap2',
+            'clm40',
+            'matsiro',
+            'jules-w1',
+            'jules-b1',
+            'orchidee',
+            'vic',
+            'dbh',
+            'h08',
+            'mpi-hm',
+            'pcr-globwb',
+            'watergap2',
            'lpjml']
 
 COUNTRIES = [[0,12], [12, 28], [28, 34], [34, 36], [36, 38],
@@ -125,7 +125,7 @@ def schedule_run(run_nb,flag,RF_model,CL_model, cnt0, cnt1, n_bas):
             "notification": "END,FAIL,TIME_LIMIT" if args.notify else "FAIL,TIME_LIMIT",
             "comment": "%s/%s" % (os.getcwd(), run_label),
             "environment": "ALL",
-            "executable": 'schedule_sim_exp.py',
+            "executable": 'schedule_sim.py',
             "options": "--RF_model %s --CL_model %s --cnt0 %i --cnt1 %i --n_bas %i"%(RF_model, CL_model, cnt0, cnt1, n_bas),
             "num_threads": args.threads,
             "mem_per_cpu": args.mem_per_cpu if not args.largemem else 15360,   # if mem_per_cpu is larger than MaxMemPerCPU then num_threads is reduced
