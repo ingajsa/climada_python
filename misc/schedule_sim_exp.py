@@ -64,10 +64,10 @@ for c, cnt_iso in enumerate(isos):
         gdpa = GDP2Asset()
         gdpa.set_countries(countries=[cnt_iso], ref_year=year, path=gdp_path, ssp_resc_path=ssp_resc,
            cap_resc_path=cap_stock_conv)
-        gdpa.write_hdf5('/p/projects/ebm/inga/climada_exposures/population/pop_{}_{}.h5'.format(cnt_iso, str(year)))
+        gdpa.write_hdf5('/p/projects/ebm/inga/climada_exposures/asset/asset_{}_{}.h5'.format(cnt_iso, str(year)))
         
         
         pop = GDP2Asset()
         pop.set_countries(countries=[cnt_iso], ref_year=year, path=pop_path, unit='pop')
         pop['if_RF'] = 7
-        gdpa.write_hdf5('/p/projects/ebm/inga/climada_exposures/asset/asset_{}_{}.h5'.format(cnt_iso, str(year)))
+        pop.write_hdf5('/p/projects/ebm/inga/climada_exposures/population/pop_{}_{}.h5'.format(cnt_iso, str(year)))
