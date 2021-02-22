@@ -52,10 +52,10 @@ CL_MODEL = [#'gfdl-esm2m',
             #'hadgem2-es',
             #'ipsl-cm5a-lr',
             #'miroc5'
-            #'princeton',
+            'princeton',
             #'gswp3',
             #'watch',
-            'wfdei'
+            #'wfdei'
             ]
 
 # Definition of the GHMS
