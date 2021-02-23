@@ -55,7 +55,7 @@ PROT_STD = ['0','flopros']
 gdp_path = '/p/projects/ebm/inga/climada_exposures/asset/'
 pop_path = '/p/projects/ebm/inga/climada_exposures/population/'
 
-basin_country_link = pd.read_csv('/home/insauer/data/river_basins/HYDROSHED_4_basin_country_link.csv')
+basin_country_link = pd.read_csv('/home/insauer/data/river_basins/HYDROSHED_3_basin_country_link.csv')
 # please set the path for the data containing the
 
 path = '/home/insauer/data/river_basins/standard/'
@@ -64,7 +64,7 @@ gf = gpd.GeoDataFrame()
 
 for cont in conts:
     
-    gdf = gpd.read_file(path+'{}/hybas_{}_lev04_v1c/hybas_{}_lev04_v1c.shp'.format(cont, cont, cont))
+    gdf = gpd.read_file(path+'{}/hybas_{}_lev03_v1c/hybas_{}_lev03_v1c.shp'.format(cont, cont, cont))
     gf = gf.append(gdf)
 
 #basins = gf['HYBAS_ID'].tolist()
@@ -225,9 +225,9 @@ for c, cnt_iso in enumerate(isos):
                 gdpa2010 = gdpa2010.drop(columns='centr_RF')
                 
                 line_counter+=1
-            dataDF.to_csv('/p/projects/ebm/inga/vulnerability/damage_sim/results/basin-country-damage_{}_{}_{}_{}.csv'.format(args.RF_model, args.CL_model, str(args.cnt0), str(args.cnt1)))
+            dataDF.to_csv('/p/projects/ebm/inga/vulnerability/damage_sim_3/results/basin-country-3-damage_{}_{}_{}_{}.csv'.format(args.RF_model, args.CL_model, str(args.cnt0), str(args.cnt1)))
    
     # save output dataframe
-    dataDF.to_csv('/p/projects/ebm/inga/vulnerability/damage_sim/results/basin-country-damage_{}_{}_{}_{}.csv'.format(args.RF_model, args.CL_model, str(args.cnt0), str(args.cnt1)))
+    dataDF.to_csv('/p/projects/ebm/inga/vulnerability/damage_sim_3/results/basin-country-3-damage_{}_{}_{}_{}.csv'.format(args.RF_model, args.CL_model, str(args.cnt0), str(args.cnt1)))
 
 
