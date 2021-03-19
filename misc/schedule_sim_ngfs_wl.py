@@ -131,11 +131,11 @@ for cnt_ind in range(len(isos)):
     dataDF['Impact_Flopros'].iloc[line_counter:line_counter + len(years)] = imp_fl.at_event
     line_counter = line_counter + len(years)
     # save output dataframe
-    imp_fl.write_csv('/p/projects/ebm/inga/ngfs/results/impact_files_wl/impact_{}_{}_{}_{}_{}.csv'.format(country[0], args.CL_model, args.RF_model, args.scenario, str(args.WL)))
+    imp_fl.write_csv('/p/projects/ebm/inga/ngfs/results/impact_files_wl_{}/impact_{}_{}_{}_{}_{}.csv'.format(str(args.WL),country[0], args.CL_model, args.RF_model, args.scenario, str(args.WL)))
 
 iso3 = isos[0]
 imp = Impact()
-imp.read_csv('/p/projects/ebm/inga/ngfs/results/impact_files_wl/' + "impact_" + iso3 + "_" + args.CL_model + "_" + args.RF_model + "_" + args.scenario + ".csv")
+imp.read_csv('/p/projects/ebm/inga/ngfs/results/impact_files_wl_' + str(args.WL) + '/' + "impact_" + iso3 + "_" + args.CL_model + "_" + args.RF_model + "_" + args.scenario + ".csv")
 exp = imp._build_exp()
 for iso3 in isos[1:]:
     if iso3 == "GIB":
@@ -143,16 +143,16 @@ for iso3 in isos[1:]:
     if iso3 == "MCO":
         continue
     imp = Impact()
-    imp.read_csv('/p/projects/ebm/inga/ngfs/results/impact_files_wl/' + "impact_" + iso3 + "_" + args.CL_model + "_" + args.RF_model + "_" + args.scenario + ".csv")
+    imp.read_csv('/p/projects/ebm/inga/ngfs/results/impact_files_wl_' + str(args.WL) + '/' + "impact_" + iso3 + "_" + args.CL_model + "_" + args.RF_model + "_" + args.scenario + ".csv")
     exp_tmp = imp._build_exp()
     exp = exp.append(exp_tmp, ignore_index=True)
     
-tifffile = "/p/projects/ebm/inga/ngfs/results/impact_files_wl/global_impact_" + iso3 + "_" + args.CL_model + "_" + args.RF_model + "_" + args.scenario +".tiff"
+tifffile = "/p/projects/ebm/inga/ngfs/results/impact_files_wl_" + str(args.WL) + "/global_impact_" + iso3 + "_" + args.CL_model + "_" + args.RF_model + "_" + args.scenario +".tiff"
 print(tifffile)
 raster, meta = u_coord.points_to_raster(exp, ['value'], res=None, raster_res=None, scheduler='threads')
 u_coord.write_raster(tifffile, raster, meta)
 
-netcdffile = "/p/projects/ebm/inga/ngfs/results/impact_files_wl/global_impact_" + iso3 + "_" + args.CL_model + "_" + args.RF_model + "_" + args.scenario + ".nc"
+netcdffile = "/p/projects/ebm/inga/ngfs/results/impact_files_wl_" + str(args.WL) + "/global_impact_" + iso3 + "_" + args.CL_model + "_" + args.RF_model + "_" + args.scenario + ".nc"
 
 print(netcdffile)
 #Do not change this line, the following command will convert the geoTIFF to a netCDF
