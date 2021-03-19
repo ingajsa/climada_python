@@ -179,7 +179,7 @@ for wl in wls:
     scen_wl = scenarios[scenarios['wlvl'] == wl]
     scen_wl = scen_wl.dropna(axis=1)
     scen_wl = scen_wl.iloc[:, 2:]
-    scenario_list = scen_wl.columns.to_list()
+    scenario_list = scen_wl.columns
     for scen in scenario_list:
         
         base_year = scen_wl[scen].values[0]
