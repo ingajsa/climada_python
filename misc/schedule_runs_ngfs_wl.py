@@ -54,7 +54,7 @@ sys.dont_write_bytecode = True
 
 # Definition of the four forcing data sets
 
-wls = [1.1, 1.5, 2.0, 2.5, 3.0]
+wls = [1.1, 1.5, 2.0, 2.5, 3.0, 3.5]
 
 scenarios = pd.read_csv('/home/insauer/projects/ngfs/warming_lvls_cmip5_21_years.csv')
 
