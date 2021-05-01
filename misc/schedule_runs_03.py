@@ -69,25 +69,25 @@ CL_MODEL = [#'gfdl-esm2m',
 # Definition of the GHMS
 
 RF_MODEL = [
-            'clm40',
-            'matsiro',
-            'jules-w1',
-            'jules-b1',
-            'orchidee',
-            'vic',
-            'dbh',
-            'h08',
-            'mpi-hm',
-            'pcr-globwb',
-            'watergap2',
-           'lpjml']
+            # 'clm40',
+            # 'matsiro',
+            # 'jules-w1',
+            # 'jules-b1',
+            # 'orchidee',
+            # 'vic',
+            # 'dbh',
+            # 'h08',
+            # 'mpi-hm',
+            # 'pcr-globwb',
+            # 'watergap2',
+            'lpjml']
 
-COUNTRIES = [[0, 30], [30, 50], [50, 90], [90, 120], [120, 160], [160, 190], [190, 215], [215, 230]]
+# COUNTRIES = [[0, 30], [30, 50], [50, 90], [90, 120], [120, 160], [160, 190], [190, 215], [215, 230]]
 
-N_BAS = [88, 103, 100, 103, 101, 104, 65, 56]
+# N_BAS = [88, 103, 100, 103, 101, 104, 65, 56]
 
 
-def schedule_run(run_nb,flag,RF_model,CL_model, cnt0, cnt1, n_bas):
+def schedule_run(run_nb,flag,RF_model,CL_model):#, cnt0, cnt1, n_bas):
     if not flag:
         run_label = "run%s" % run_nb
         if os.path.exists(run_label):
@@ -127,8 +127,8 @@ def schedule_run(run_nb,flag,RF_model,CL_model, cnt0, cnt1, n_bas):
             "notification": "END,FAIL,TIME_LIMIT" if args.notify else "FAIL,TIME_LIMIT",
             "comment": "%s/%s" % (os.getcwd(), run_label),
             "environment": "ALL",
-            "executable": 'schedule_sim.py',
-            "options": "--RF_model %s --CL_model %s --cnt0 %i --cnt1 %i --n_bas %i"%(RF_model, CL_model, cnt0, cnt1, n_bas),
+            "executable": 'schedule_sim_03.py',
+            "options": "--RF_model %s --CL_model %s"%(RF_model, CL_model), #cnt0, cnt1, n_bas),
             "num_threads": args.threads,
             "mem_per_cpu": args.mem_per_cpu if not args.largemem else 15360,   # if mem_per_cpu is larger than MaxMemPerCPU then num_threads is reduced
             "other": "#SBATCH --partition=ram_gpu" if args.largemem else ""
@@ -144,7 +144,7 @@ def schedule_run(run_nb,flag,RF_model,CL_model, cnt0, cnt1, n_bas):
 #SBATCH --export=%(environment)s
 #SBATCH --mail-type=%(notification)s
 #SBATCH --%(node_usage)s
-#SBATCH --account=ebm        
+#SBATCH --account=ebm
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=%(num_threads)1d
@@ -153,7 +153,7 @@ def schedule_run(run_nb,flag,RF_model,CL_model, cnt0, cnt1, n_bas):
 %(other)s
 export OMP_PROC_BIND=true
 export OMP_NUM_THREADS=%(num_threads)1d
-source activate climada_env        
+source activate climada_env
 ulimit -c unlimited
 %(executable)s %(options)s
 " | sbatch -Q""" % run_params
@@ -165,9 +165,9 @@ ulimit -c unlimited
         #run_cnt += 1
 
 num = 1
-num *= len(RF_MODEL)
-num *= len(CL_MODEL)
-num *= len(COUNTRIES)
+# num *= len(RF_MODEL)
+# num *= len(CL_MODEL)
+# num *= len(COUNTRIES)
 
 single = True if num == 1 else False
 if num > 1:
@@ -183,10 +183,10 @@ if num > 1:
 enum = 1
 for rf_model in RF_MODEL:
     for cl_model in CL_MODEL:
-        for c, cnts in enumerate(COUNTRIES):
-            schedule_run(run_nb=enum,flag=single,RF_model=rf_model,CL_model=cl_model, cnt0 = cnts[0],
-                         cnt1 = cnts[1], n_bas = N_BAS[c])
-            enum += 1
+        #for c, cnts in enumerate(COUNTRIES):
+        schedule_run(run_nb=enum,flag=single,RF_model=rf_model,CL_model=cl_model)#, cnt0 = cnts[0],
+                         #cnt1 = cnts[1], n_bas = N_BAS[c])
+        enum += 1
 if num > 1:
     print("Scheduled %s runs" % num)
 
