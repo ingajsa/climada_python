@@ -187,7 +187,7 @@ for rf_model in RF_MODEL:
         schedule_run(run_nb=enum,flag=single,RF_model=rf_model,CL_model=cl_model)#, cnt0 = cnts[0],
                          #cnt1 = cnts[1], n_bas = N_BAS[c])
         enum += 1
-if num > 1:
+if num >= 1:
     print("Scheduled %s runs" % num)
 
 # def set_in_yml(paths, value):
