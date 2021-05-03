@@ -22,8 +22,8 @@ import copy
 from climada.hazard.centroids import Centroids
 
 from climada.engine import Impact
-from osgeo import gdal
-from climada.util import coordinates as u_coord
+# from osgeo import gdal
+# from climada.util import coordinates as u_coord
 
 
 parser = argparse.ArgumentParser(
@@ -85,11 +85,11 @@ for n,iso in enumerate(iso3_list[1:]):
     gdpa = gdpa.append(gdpa1)
 
 gdpa.write_hdf5('/home/insauer/data/plot_exposure/global_exposure_2000.h5')
-raster, meta = u_coord.points_to_raster(gdpa, ['value'], res=None, raster_res=None, scheduler='threads')
-tifffile = "/home/insauer/data/plot_exposure/global_exposure_2000.tiff"
-u_coord.write_raster(tifffile, raster, meta)
+# raster, meta = u_coord.points_to_raster(gdpa, ['value'], res=None, raster_res=None, scheduler='threads')
+# tifffile = "/home/insauer/data/plot_exposure/global_exposure_2000.tiff"
+# u_coord.write_raster(tifffile, raster, meta)
 
-netcdffile = "/home/insauer/data/plot_exposure/global_exposure_2000.nc"
+# netcdffile = "/home/insauer/data/plot_exposure/global_exposure_2000.nc"
 
-#Do not change this line, the following command will convert the geoTIFF to a netCDF
-gdal.Translate(netcdffile, tifffile, format='NetCDF')
+# #Do not change this line, the following command will convert the geoTIFF to a netCDF
+# gdal.Translate(netcdffile, tifffile, format='NetCDF')
