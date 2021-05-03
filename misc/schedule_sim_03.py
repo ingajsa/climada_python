@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sat May  1 01:59:31 2021
+Created on Wed Aug 19 22:35:58 2020
 
 @author: insauer
 """
 
+#!/usr/bin/env python
 import numpy as np
 import pandas as pd
 import sys
@@ -15,16 +16,20 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 import argparse
+import geopandas as gpd
 from climada.entity.exposures.base import Exposures
+from climada.entity.impact_funcs.river_flood import flood_imp_func_set
+from climada.hazard.river_flood import RiverFlood
 from climada.util.constants import RIVER_FLOOD_REGIONS_CSV
 from shapely.geometry.multipolygon import MultiPolygon
 import copy
+
 from climada.hazard.centroids import Centroids
 
 from climada.engine import Impact
 # from osgeo import gdal
 # from climada.util import coordinates as u_coord
-
+print('parse')
 
 parser = argparse.ArgumentParser(
     description='run climada for different climate and runoff models')
