@@ -47,6 +47,7 @@ args = parser.parse_args()
 
 gdp_path = '/p/projects/ebm/inga/climada_exposures/asset/'
 
+print('start')
 iso3_list=['ITA', 'GHA', 'MRT', 'MTQ', 'TJK', 'COL', 'MMR',
           'VEN', 'YEM', 'MEX', 'UKR', 'SWZ', 'PYF', 'TON', 'BIH',
           'CPV', 'CYP', 'BTN', 'NFK', 'BMU', 'MWI', 'KGZ', 'SLE',
