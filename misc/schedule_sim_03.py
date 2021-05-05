@@ -92,7 +92,7 @@ raster, meta = u_coord.points_to_raster(gdpa, ['value'], res=None, raster_res=No
 tifffile = "/home/insauer/data/plot_exposure/global_exposure_2000.tiff"
 u_coord.write_raster(tifffile, raster, meta)
 
-netcdffile = "/home/insauer/data/plot_exposure/global_exposure_2000.nc"
+#netcdffile = "/home/insauer/data/plot_exposure/global_exposure_2000.nc"
 
 # #Do not change this line, the following command will convert the geoTIFF to a netCDF
-gdal.Translate(netcdffile, tifffile, format='NetCDF')
+#gdal.Translate(netcdffile, tifffile, format='NetCDF')
