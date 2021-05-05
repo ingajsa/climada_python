@@ -88,7 +88,7 @@ for n,iso in enumerate(iso3_list[1:]):
     gdpa = gdpa.append(gdpa1)
 
 gdpa.write_hdf5('/home/insauer/data/plot_exposure/global_exposure_2000.h5')
-raster, meta = u_coord.points_to_raster(gdpa, ['value'], res=None, raster_res=None)
+raster, meta = u_coord.points_to_raster(gdpa, ['value'], res=None, raster_res=None, scheduler='threads')
 print('done')
 #tifffile = "/home/insauer/data/plot_exposure/global_exposure_2000.tiff"
 #u_coord.write_raster(tifffile, raster, meta)
